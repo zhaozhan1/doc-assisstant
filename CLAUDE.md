@@ -27,10 +27,10 @@ uvicorn app.main:app --reload --port 8000
 
 # 前端
 cd frontend
-npm install
-npm run dev                      # 开发服务器
-npm run build                    # 生产构建
-npm run test                     # 前端测试
+pnpm install                      # 安装依赖
+pnpm dev                          # 开发服务器
+pnpm build                        # 生产构建
+pnpm test                         # 前端测试
 ```
 
 ## 架构
@@ -65,7 +65,7 @@ npm run test                     # 前端测试
 
 ## 依赖环境
 
-Conda 环境 `doc-assistant`（Python 3.10+），外部依赖：Node.js 18+、Tesseract OCR 5.x + 中文语言包、Ollama。
+Conda 环境 `doc-assistant`（Python 3.10+），前端包管理使用 pnpm（隔离依赖，避免与本机其他项目冲突）。外部依赖：Node.js 18+、pnpm 8+、Tesseract OCR 5.x + 中文语言包、Ollama。
 
 ## 文档规范
 
