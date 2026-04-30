@@ -38,5 +38,9 @@ output/
 # Node
 node_modules/
 
+# Coverage
+.coverage
+htmlcov/
+
 # Environment
 .env

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 公文助手（Doc-Assistant）— 本地化政务公文知识库与 AI 写作辅助系统。单用户、单机部署，从历史文档自动构建知识库，辅助生成符合公文规范的初稿。
 
-**当前状态**：前期设计完成，尚未开始编码。
+**当前状态**：阶段一（项目基础+文档解析）编码完成，待代码审查。
 
 ## 常用命令
 
@@ -17,6 +17,8 @@ conda activate doc-assistant
 # 后端
 cd backend
 pip install -e ".[dev]"          # 安装依赖（含开发依赖）
+ruff check app/ tests/           # Lint 检查（PEP8）
+ruff format --check app/ tests/  # 格式检查
 pytest                           # 运行全部测试
 pytest tests/test_ingestion/     # 运行指定模块测试
 pytest -x                        # 遇到失败即停止
@@ -31,6 +33,7 @@ pnpm install                      # 安装依赖
 pnpm dev                          # 开发服务器
 pnpm build                        # 生产构建
 pnpm test                         # 前端测试
+pnpm lint                         # Lint 检查（TypeScript Strict）
 ```
 
 ## 架构
@@ -56,6 +59,12 @@ pnpm test                         # 前端测试
 - **TDD**：所有功能点按 Red-Green-Refactor 循环开发，测试覆盖率 ≥ 80%
 - **5 阶段交付**：项目基础+文档解析 → 检索引擎 → 写作辅助 → Web UI → 优化加固
 - **阶段四 Web UI 前**：须调用 `/frontend-design` skill 指导界面设计
+
+## 代码规范
+
+- **后端（Python）**：遵循 PEP8 规范，使用 `ruff` 作为 Linter 和 Formatter。每次代码审查前必须通过 `ruff check` 和 `ruff format --check`
+- **前端（TypeScript）**：遵循 TypeScript Strict 规范（`"strict": true`），使用 ESLint + Prettier。每次代码审查前必须通过 `pnpm lint`
+- **Lint 前置**：任何代码审查（包括 `/code-review`）之前，必须先确保 Lint 检查全部通过。Lint 不通过的代码不进入审查流程
 
 ## 设计文档
 
