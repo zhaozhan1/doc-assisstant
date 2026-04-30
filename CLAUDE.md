@@ -82,6 +82,7 @@ Conda 环境 `doc-assistant`（Python 3.10+），外部依赖：Node.js 18+、Te
 2. **文档路径** — 所有文档必须放置于 `docs/` 目录规范内，不使用 skill 默认路径
 3. **文档流转** — 计划文档严格执行 `todo/ → doing/ → done/` 文件移动
 4. **TDD 模式** — 所有功能点按 Red-Green-Refactor 循环开发，先写测试再写实现
+5. **`.claudeignore` 遵守** — 搜索和读取文件时必须遵守 `.claudeignore`，不得读取或包含其中所列文件的内容（依赖目录、构建产物、数据目录、环境变量文件等）
 
 ## 工作流步骤配置
 
