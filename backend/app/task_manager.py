@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
@@ -11,6 +12,8 @@ from uuid import uuid4
 from app.models.task import FileResult, TaskProgress, TaskStatus
 
 logger = logging.getLogger(__name__)
+
+_UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.IGNORECASE)
 
 
 class TaskManager:
@@ -27,6 +30,10 @@ class TaskManager:
 
     async def start_import(self, paths: list[Path], resume_task_id: str | None = None) -> str:
         if resume_task_id:
+            if not _UUID_RE.match(resume_task_id):
+                raise ValueError(f"非法任务 ID: {resume_task_id}")
+            if resume_task_id not in self._tasks:
+                raise KeyError(f"任务不存在: {resume_task_id}")
             task = self._tasks[resume_task_id]
             task.status = TaskStatus.RUNNING
             remaining = [Path(p) for p in task.pending_files]
@@ -105,6 +112,12 @@ class TaskManager:
 
     def _parse_task(self, json_str: str) -> TaskProgress:
         data = json.loads(json_str)
+        required_keys = {"task_id", "status", "total", "processed", "success", "failed", "skipped"}
+        missing = required_keys - set(data.keys())
+        if missing:
+            raise ValueError(f"任务 JSON 缺少必要字段: {missing}")
+        if not _UUID_RE.match(data["task_id"]):
+            raise ValueError(f"非法任务 ID: {data['task_id']}")
         data["status"] = TaskStatus(data["status"])
         data["failed_files"] = [FileResult(**fr) for fr in data.get("failed_files", [])]
         return TaskProgress(**data)

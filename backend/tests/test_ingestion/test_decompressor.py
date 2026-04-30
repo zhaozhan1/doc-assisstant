@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import zipfile
 from pathlib import Path
 
@@ -81,3 +82,42 @@ class TestDirectory:
         formats = {r.format for r in results}
         assert formats == {".txt", ".pdf"}
         assert len(results) == 2
+
+
+class TestSecurity:
+    def test_zip_slip_rejected(self, decompressor: Decompressor, tmp_path: Path) -> None:
+        zip_path = tmp_path / "evil.zip"
+        with zipfile.ZipFile(zip_path, "w") as zf:
+            zf.writestr("../../../etc/passwd", "pwned")
+        with pytest.raises(ValueError, match="zip-slip"):
+            decompressor.extract(zip_path)
+
+    def test_oversized_archive_rejected(
+        self, decompressor: Decompressor, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        import app.ingestion.decompressor as mod
+
+        monkeypatch.setattr(mod, "MAX_ARCHIVE_SIZE", 10)
+        zip_path = tmp_path / "big.zip"
+        with zipfile.ZipFile(zip_path, "w") as zf:
+            zf.writestr("data.txt", "x" * 100)
+        results = decompressor.extract(zip_path)
+        assert results == []
+
+    def test_symlink_in_directory_skipped(self, decompressor: Decompressor, tmp_path: Path) -> None:
+        real = tmp_path / "real.txt"
+        real.write_text("content")
+        link = tmp_path / "link.txt"
+        link.symlink_to(real)
+        results = decompressor.extract(tmp_path)
+        assert len(results) == 1
+        assert results[0].path == real
+
+    def test_zip_slip_path_traversal_rejected(self, decompressor: Decompressor, tmp_path: Path) -> None:
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as zf:
+            zf.writestr("foo/../../bar.txt", "traversal")
+        zip_path = tmp_path / "traversal.zip"
+        zip_path.write_bytes(buf.getvalue())
+        with pytest.raises(ValueError, match="zip-slip"):
+            decompressor.extract(zip_path)

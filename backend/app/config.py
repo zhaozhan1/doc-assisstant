@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import os
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict, YamlConfigSettingsSource
 
 
@@ -24,6 +25,12 @@ class ClaudeConfig(BaseModel):
     base_url: str = "https://api.anthropic.com"
     api_key: str = ""
     chat_model: str = "claude-sonnet-4-20250514"
+
+    @model_validator(mode="after")
+    def _resolve_api_key(self) -> ClaudeConfig:
+        if not self.api_key:
+            self.api_key = os.environ.get("CLAUDE_API_KEY", "")
+        return self
 
 
 class LLMConfig(BaseModel):

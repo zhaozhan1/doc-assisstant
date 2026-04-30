@@ -61,3 +61,40 @@ knowledge_base:
 """)
         with pytest.raises(ValidationError):
             AppConfig(_yaml_file=str(config_file))
+
+
+class TestClaudeApiKey:
+    def test_api_key_from_env(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("CLAUDE_API_KEY", "sk-test-123")
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("""
+llm:
+  providers:
+    claude:
+      api_key: ""
+""")
+        config = AppConfig(_yaml_file=str(config_file))
+        claude_cfg = config.llm.providers.get("claude")
+        assert claude_cfg is not None
+        assert claude_cfg.api_key == "sk-test-123"
+
+    def test_yaml_api_key_takes_precedence(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("CLAUDE_API_KEY", "from-env")
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("""
+llm:
+  providers:
+    claude:
+      api_key: "from-yaml"
+""")
+        config = AppConfig(_yaml_file=str(config_file))
+        claude_cfg = config.llm.providers.get("claude")
+        assert claude_cfg is not None
+        assert claude_cfg.api_key == "from-yaml"
+
+    def test_no_api_key_defaults_empty(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("CLAUDE_API_KEY", raising=False)
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("{}")
+        config = AppConfig(_yaml_file=str(config_file))
+        assert config.llm.default_provider == "ollama"

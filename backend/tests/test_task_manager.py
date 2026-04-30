@@ -137,3 +137,41 @@ class TestPersistence:
         progress = tm2.get_progress(task_id)
         assert progress.status == TaskStatus.COMPLETED
         assert progress.success == 1
+
+
+class TestSecurity:
+    @pytest.mark.asyncio
+    async def test_invalid_resume_task_id_rejected(self, task_manager: TaskManager, tmp_path: Path) -> None:
+        files = [tmp_path / "a.txt"]
+        files[0].write_text("test")
+        with pytest.raises(ValueError, match="非法任务 ID"):
+            await task_manager.start_import(files, resume_task_id="../../etc/passwd")
+
+    @pytest.mark.asyncio
+    async def test_nonexistent_resume_task_id_raises(self, task_manager: TaskManager, tmp_path: Path) -> None:
+        files = [tmp_path / "a.txt"]
+        files[0].write_text("test")
+        with pytest.raises(KeyError, match="任务不存在"):
+            await task_manager.start_import(files, resume_task_id="00000000-0000-0000-0000-000000000000")
+
+    def test_malformed_json_skipped(self, mock_ingester: AsyncMock, tmp_tasks_dir: str) -> None:
+        tasks_dir = Path(tmp_tasks_dir)
+        tasks_dir.mkdir(parents=True, exist_ok=True)
+        bad_file = tasks_dir / "bad.json"
+        bad_file.write_text("not valid json{{{")
+
+        with patch.object(TaskManager, "TASKS_DIR", tmp_tasks_dir):
+            tm = TaskManager(mock_ingester)
+            tm.TASKS_DIR = tmp_tasks_dir
+        assert len(tm._tasks) == 0
+
+    def test_missing_fields_json_skipped(self, mock_ingester: AsyncMock, tmp_tasks_dir: str) -> None:
+        tasks_dir = Path(tmp_tasks_dir)
+        tasks_dir.mkdir(parents=True, exist_ok=True)
+        bad_file = tasks_dir / "missing.json"
+        bad_file.write_text('{"task_id": "abc"}')
+
+        with patch.object(TaskManager, "TASKS_DIR", tmp_tasks_dir):
+            tm = TaskManager(mock_ingester)
+            tm.TASKS_DIR = tmp_tasks_dir
+        assert len(tm._tasks) == 0
