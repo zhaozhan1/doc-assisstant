@@ -1,0 +1,38 @@
+knowledge_base:
+  source_folder: ""
+  db_path: "./data/chroma_db"
+  metadata_path: "./data/metadata"
+  chunk_size: 500
+  chunk_overlap: 50
+
+llm:
+  default_provider: "ollama"
+  providers:
+    ollama:
+      base_url: "http://localhost:11434"
+      chat_model: "qwen2.5:14b"
+      embed_model: "bge-large-zh-v1.5"
+    claude:
+      base_url: "https://api.anthropic.com"
+      api_key: ""
+      chat_model: "claude-sonnet-4-20250514"
+
+online_search:
+  enabled: false
+  provider: "tavily"
+  api_key: ""
+  domains:
+    - "gov.cn"
+  max_results: 3
+
+output:
+  format: "docx"
+  save_path: "./output"
+  include_sources: true
+
+ocr:
+  tesseract_cmd: ""
+
+logging:
+  level: "INFO"
+  file: "./logs/app.log"
