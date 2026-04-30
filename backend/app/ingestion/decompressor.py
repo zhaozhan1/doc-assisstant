@@ -10,7 +10,14 @@ from app.models.document import FileInfo
 logger = logging.getLogger(__name__)
 
 SUPPORTED_FORMATS = {
-    ".docx", ".pdf", ".xlsx", ".pptx", ".png", ".jpg", ".jpeg", ".txt",
+    ".docx",
+    ".pdf",
+    ".xlsx",
+    ".pptx",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".txt",
 }
 ARCHIVE_FORMATS = {".zip", ".rar", ".7z"}
 
@@ -57,10 +64,12 @@ class Decompressor:
                 zf.extractall(dest)
         elif suffix == ".7z":
             import py7zr
+
             with py7zr.SevenZipFile(archive_path, "r") as sz:
                 sz.extractall(dest)
         elif suffix == ".rar":
             from pyunpack import Archive
+
             Archive(str(archive_path)).extractall(dest)
         else:
             logger.warning("不支持的压缩格式: %s", suffix)

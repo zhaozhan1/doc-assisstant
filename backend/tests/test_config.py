@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from app.config import AppConfig
 
@@ -49,7 +50,7 @@ logging:
 knowledge_base:
   chunk_size: 50
 """)
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             AppConfig(_yaml_file=str(config_file))
 
     def test_chunk_overlap_validation(self, tmp_path: Path) -> None:
@@ -58,5 +59,5 @@ knowledge_base:
 knowledge_base:
   chunk_overlap: 300
 """)
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             AppConfig(_yaml_file=str(config_file))

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import pytesseract
 from PIL import Image
@@ -89,6 +89,7 @@ class Extractor:
 
     def _ocr_pdf(self, path: Path) -> str:
         from pdf2image import convert_from_path
+
         images = convert_from_path(str(path))
         texts = []
         for img in images:
@@ -106,9 +107,7 @@ class Extractor:
                 header = [str(c) if c else "" for c in rows[0]]
                 for row in rows[1:]:
                     values = [str(c) if c else "" for c in row]
-                    text_parts.append(
-                        ", ".join(f"{h}: {v}" for h, v in zip(header, values) if v)
-                    )
+                    text_parts.append(", ".join(f"{h}: {v}" for h, v in zip(header, values, strict=False) if v))
         wb.close()
         return ExtractedDoc(text="\n".join(text_parts), structure=[], source_path=path)
 

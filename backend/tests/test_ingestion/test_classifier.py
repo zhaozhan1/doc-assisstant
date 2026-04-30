@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.ingestion.classifier import DOC_TYPES, Classifier, MetadataExtractor
+from app.ingestion.classifier import Classifier, MetadataExtractor
 from app.models.document import ExtractedDoc
 
 

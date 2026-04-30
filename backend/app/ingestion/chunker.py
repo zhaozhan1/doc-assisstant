@@ -87,4 +87,4 @@ class Chunker:
     def _take_overlap(self, text: str) -> str:
         if not text or self._chunk_overlap <= 0:
             return ""
-        return text[-self._chunk_overlap:]
+        return text[-self._chunk_overlap :]

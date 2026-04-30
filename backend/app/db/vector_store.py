@@ -43,9 +43,7 @@ class VectorStore:
     async def delete_by_file(self, source_file: str) -> None:
         self._collection.delete(where={"source_file": source_file})
 
-    async def search(
-        self, query: str, top_k: int = 10, filters: dict | None = None
-    ) -> list[SearchResult]:
+    async def search(self, query: str, top_k: int = 10, filters: dict | None = None) -> list[SearchResult]:
         query_embedding = (await self._llm.embed([query]))[0]
         results = self._collection.query(
             query_embeddings=[query_embedding],
@@ -60,6 +58,7 @@ class VectorStore:
                 results["documents"][0],
                 results["metadatas"][0],
                 results["distances"][0],
+                strict=False,
             )
         ]
 

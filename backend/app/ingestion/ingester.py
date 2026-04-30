@@ -39,9 +39,7 @@ class Ingester:
                 meta = self.metadata_extractor.extract(doc)
                 meta.doc_type = await self.classifier.classify(doc.text)
 
-                existing = await self.vector_store.check_file_exists(
-                    str(fi.path), meta.file_md5
-                )
+                existing = await self.vector_store.check_file_exists(str(fi.path), meta.file_md5)
                 if existing:
                     continue
 

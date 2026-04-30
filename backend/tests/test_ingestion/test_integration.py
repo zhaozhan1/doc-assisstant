@@ -1,4 +1,5 @@
 """端到端集成测试：文件导入 → 入库 → 检索"""
+
 from __future__ import annotations
 
 import asyncio
@@ -44,9 +45,7 @@ def integration_env(tmp_path: Path) -> tuple[Ingester, VectorStore, TaskManager]
 
 class TestEndToEnd:
     @pytest.mark.asyncio
-    async def test_full_import_and_search(
-        self, integration_env: tuple, tmp_path: Path
-    ) -> None:
+    async def test_full_import_and_search(self, integration_env: tuple, tmp_path: Path) -> None:
         ingester, vector_store, task_manager = integration_env
 
         txt = tmp_path / "通知.txt"
@@ -66,9 +65,7 @@ class TestEndToEnd:
         assert len(results) >= 1
 
     @pytest.mark.asyncio
-    async def test_batch_import_with_failure(
-        self, integration_env: tuple, tmp_path: Path
-    ) -> None:
+    async def test_batch_import_with_failure(self, integration_env: tuple, tmp_path: Path) -> None:
         ingester, vector_store, task_manager = integration_env
 
         good = tmp_path / "good.txt"

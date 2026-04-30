@@ -5,12 +5,10 @@ from abc import ABC, abstractmethod
 
 class BaseLLMProvider(ABC):
     @abstractmethod
-    async def chat(self, messages: list[dict], **kwargs) -> str:
-        ...
+    async def chat(self, messages: list[dict], **kwargs) -> str: ...
 
     @abstractmethod
-    async def embed(self, texts: list[str]) -> list[list[float]]:
-        ...
+    async def embed(self, texts: list[str]) -> list[list[float]]: ...
 
     async def classify(self, text: str, labels: list[str]) -> str:
         prompt = (

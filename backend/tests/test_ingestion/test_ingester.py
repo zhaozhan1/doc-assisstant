@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import AsyncMock
 
 import pytest
 
@@ -9,7 +8,6 @@ from app.config import OCRConfig
 from app.db.vector_store import VectorStore
 from app.ingestion.ingester import Ingester
 from app.llm.base import BaseLLMProvider
-from app.models.task import FileResult
 
 
 class MockLLMProvider(BaseLLMProvider):
@@ -72,7 +70,9 @@ class TestProcessFile:
         assert result.error is not None
 
     @pytest.mark.asyncio
-    async def test_skips_unchanged_file(self, ingester: Ingester, mock_vector_store: VectorStore, tmp_path: Path) -> None:
+    async def test_skips_unchanged_file(
+        self, ingester: Ingester, mock_vector_store: VectorStore, tmp_path: Path
+    ) -> None:
         txt = tmp_path / "cached.txt"
         txt.write_text("已存在的内容", encoding="utf-8")
 

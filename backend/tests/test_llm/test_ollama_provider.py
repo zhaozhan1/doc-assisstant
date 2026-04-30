@@ -21,9 +21,12 @@ class TestOllamaChat:
     @pytest.mark.asyncio
     async def test_chat_returns_content(self, provider: OllamaProvider) -> None:
         respx.post("http://localhost:11434/api/chat").mock(
-            return_value=httpx.Response(200, json={
-                "message": {"role": "assistant", "content": "你好，有什么可以帮你？"},
-            })
+            return_value=httpx.Response(
+                200,
+                json={
+                    "message": {"role": "assistant", "content": "你好，有什么可以帮你？"},
+                },
+            )
         )
         result = await provider.chat([{"role": "user", "content": "你好"}])
         assert result == "你好，有什么可以帮你？"
@@ -44,9 +47,12 @@ class TestOllamaEmbed:
     async def test_embed_returns_vectors(self, provider: OllamaProvider) -> None:
         fake_embedding = [0.1, 0.2, 0.3]
         respx.post("http://localhost:11434/api/embed").mock(
-            return_value=httpx.Response(200, json={
-                "embeddings": [{"embedding": fake_embedding}, {"embedding": fake_embedding}],
-            })
+            return_value=httpx.Response(
+                200,
+                json={
+                    "embeddings": [{"embedding": fake_embedding}, {"embedding": fake_embedding}],
+                },
+            )
         )
         result = await provider.embed(["文本1", "文本2"])
         assert len(result) == 2
@@ -55,8 +61,6 @@ class TestOllamaEmbed:
     @respx.mock
     @pytest.mark.asyncio
     async def test_embed_empty_list(self, provider: OllamaProvider) -> None:
-        respx.post("http://localhost:11434/api/embed").mock(
-            return_value=httpx.Response(200, json={"embeddings": []})
-        )
+        respx.post("http://localhost:11434/api/embed").mock(return_value=httpx.Response(200, json={"embeddings": []}))
         result = await provider.embed([])
         assert result == []

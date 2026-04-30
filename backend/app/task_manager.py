@@ -23,14 +23,9 @@ class TaskManager:
         self._load_tasks()
 
     def get_unfinished_tasks(self) -> list[TaskProgress]:
-        return [
-            t for t in self._tasks.values()
-            if t.status in (TaskStatus.RUNNING, TaskStatus.PENDING)
-        ]
+        return [t for t in self._tasks.values() if t.status in (TaskStatus.RUNNING, TaskStatus.PENDING)]
 
-    async def start_import(
-        self, paths: list[Path], resume_task_id: str | None = None
-    ) -> str:
+    async def start_import(self, paths: list[Path], resume_task_id: str | None = None) -> str:
         if resume_task_id:
             task = self._tasks[resume_task_id]
             task.status = TaskStatus.RUNNING
@@ -73,7 +68,7 @@ class TaskManager:
             else:
                 task.skipped += 1
 
-            task.pending_files = [str(p) for p in paths[task.processed:]]
+            task.pending_files = [str(p) for p in paths[task.processed :]]
             task.updated_at = datetime.now().isoformat()
             self._save_task(task)
 
@@ -111,7 +106,5 @@ class TaskManager:
     def _parse_task(self, json_str: str) -> TaskProgress:
         data = json.loads(json_str)
         data["status"] = TaskStatus(data["status"])
-        data["failed_files"] = [
-            FileResult(**fr) for fr in data.get("failed_files", [])
-        ]
+        data["failed_files"] = [FileResult(**fr) for fr in data.get("failed_files", [])]
         return TaskProgress(**data)

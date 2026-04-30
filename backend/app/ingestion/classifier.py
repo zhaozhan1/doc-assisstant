@@ -12,14 +12,28 @@ from app.models.document import DocumentMetadata, ExtractedDoc
 logger = logging.getLogger(__name__)
 
 DOC_TYPES = [
-    "通知", "公告", "请示", "报告", "方案", "规划",
-    "会议纪要", "合同", "工作总结", "领导讲话稿", "调研报告", "汇报PPT", "其他",
+    "通知",
+    "公告",
+    "请示",
+    "报告",
+    "方案",
+    "规划",
+    "会议纪要",
+    "合同",
+    "工作总结",
+    "领导讲话稿",
+    "调研报告",
+    "汇报PPT",
+    "其他",
 ]
 
 
 class MetadataExtractor:
     _DATE_PATTERNS = [
-        (re.compile(r"(\d{4})年(\d{1,2})月(\d{1,2})日"), lambda m: datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)))),
+        (
+            re.compile(r"(\d{4})年(\d{1,2})月(\d{1,2})日"),
+            lambda m: datetime(int(m.group(1)), int(m.group(2)), int(m.group(3))),
+        ),
         (re.compile(r"(\d{4})-(\d{2})-(\d{2})"), lambda m: datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)))),
         (re.compile(r"(\d{4})(\d{2})(\d{2})"), lambda m: datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)))),
     ]

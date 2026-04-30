@@ -25,9 +25,7 @@ def setup_logging(config: LoggingConfig) -> None:
 
     log_path = Path(config.file)
     log_path.parent.mkdir(parents=True, exist_ok=True)
-    file_handler = RotatingFileHandler(
-        config.file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
-    )
+    file_handler = RotatingFileHandler(config.file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8")
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(logging.Formatter(log_format))
     root_logger.addHandler(file_handler)

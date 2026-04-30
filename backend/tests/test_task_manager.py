@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.models.task import FileResult, TaskProgress, TaskStatus
+from app.models.task import FileResult, TaskStatus
 from app.task_manager import TaskManager
 
 
@@ -107,9 +107,7 @@ class TestGetUnfinishedTasks:
         files = [tmp_path / "a.txt"]
         files[0].write_text("test")
 
-        mock_ingester.process_file.return_value = FileResult(
-            path=str(files[0]), status="success"
-        )
+        mock_ingester.process_file.return_value = FileResult(path=str(files[0]), status="success")
 
         task_id = await task_manager.start_import(files)
         await asyncio.sleep(0.5)
@@ -120,15 +118,11 @@ class TestGetUnfinishedTasks:
 
 class TestPersistence:
     @pytest.mark.asyncio
-    async def test_saves_and_loads_tasks(
-        self, mock_ingester: AsyncMock, tmp_tasks_dir: str, tmp_path: Path
-    ) -> None:
+    async def test_saves_and_loads_tasks(self, mock_ingester: AsyncMock, tmp_tasks_dir: str, tmp_path: Path) -> None:
         files = [tmp_path / "a.txt"]
         files[0].write_text("test")
 
-        mock_ingester.process_file.return_value = FileResult(
-            path=str(files[0]), status="success"
-        )
+        mock_ingester.process_file.return_value = FileResult(path=str(files[0]), status="success")
 
         with patch.object(TaskManager, "TASKS_DIR", tmp_tasks_dir):
             tm1 = TaskManager(mock_ingester)
