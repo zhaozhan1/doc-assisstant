@@ -23,6 +23,8 @@ online_search:
   api_key: ""
   domains:
     - "gov.cn"
+    - "npc.gov.cn"
+    - "moj.gov.cn"
   max_results: 3
 
 output:

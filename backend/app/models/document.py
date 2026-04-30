@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
@@ -31,7 +32,7 @@ class ExtractedDoc:
 class DocumentMetadata:
     file_name: str
     source_path: str
-    import_time: str
-    doc_date: str | None = None
+    import_time: datetime
+    doc_date: datetime | None = None
     doc_type: str = ""
     file_md5: str = ""
