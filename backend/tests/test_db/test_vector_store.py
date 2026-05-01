@@ -193,3 +193,28 @@ class TestFindByMd5:
         result = await vs_with_mock_collection.find_by_md5("nonexistent")
 
         assert result is None
+
+
+class TestFileExists:
+    @pytest.mark.asyncio
+    async def test_returns_true_when_file_in_store(
+        self, vs_with_mock_collection: VectorStore, mock_collection: MagicMock
+    ) -> None:
+        mock_collection.get.return_value = {
+            "ids": ["doc.pdf::0"],
+        }
+
+        result = await vs_with_mock_collection.file_exists("doc.pdf")
+
+        mock_collection.get.assert_called_once_with(where={"source_file": "doc.pdf"}, limit=1)
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_returns_false_when_file_not_in_store(
+        self, vs_with_mock_collection: VectorStore, mock_collection: MagicMock
+    ) -> None:
+        mock_collection.get.return_value = {"ids": []}
+
+        result = await vs_with_mock_collection.file_exists("missing.pdf")
+
+        assert result is False

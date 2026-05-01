@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Literal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.deps import get_file_service
 from app.models.search import ClassificationUpdate, FileListRequest, IndexedFile
@@ -38,7 +38,10 @@ async def delete_file(
     source_file: str,
     file_service: FileService = _file_service_dep,
 ) -> dict:
-    await file_service.delete_file(source_file)
+    try:
+        await file_service.delete_file(source_file)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
     return {"status": "deleted"}
 
 
@@ -47,7 +50,10 @@ async def reindex_file(
     source_file: str,
     file_service: FileService = _file_service_dep,
 ) -> dict:
-    result = await file_service.reindex_file(source_file)
+    try:
+        result = await file_service.reindex_file(source_file)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
     return {"status": result.status, "chunks_count": result.chunks_count}
 
 

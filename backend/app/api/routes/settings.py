@@ -12,19 +12,26 @@ router = APIRouter(prefix="/api/settings", tags=["settings"])
 _settings_dep = Depends(get_settings_service)
 
 
-@router.get("/online-search", response_model=OnlineSearchConfig)
+def _mask_config(config: OnlineSearchConfig) -> dict:
+    data = config.model_dump()
+    if data.get("api_key"):
+        data["api_key"] = "********"
+    return data
+
+
+@router.get("/online-search")
 async def get_online_search_config(
     service: SettingsService = _settings_dep,
-) -> OnlineSearchConfig:
-    return service.get_online_search_config()
+) -> dict:
+    return _mask_config(service.get_online_search_config())
 
 
-@router.put("/online-search", response_model=OnlineSearchConfig)
+@router.put("/online-search")
 async def update_online_search_config(
     update: OnlineSearchConfigUpdate,
     service: SettingsService = _settings_dep,
-) -> OnlineSearchConfig:
-    return service.update_online_search_config(update)
+) -> dict:
+    return _mask_config(service.update_online_search_config(update))
 
 
 @router.post("/online-search/test-connection", response_model=ConnectionTestResult)

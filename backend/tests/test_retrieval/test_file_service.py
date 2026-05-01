@@ -74,21 +74,46 @@ async def test_list_files_filters_by_type(svc: FileService, mock_vs: AsyncMock) 
 
 
 async def test_delete_file(svc: FileService, mock_vs: AsyncMock) -> None:
-    """delete_file delegates to vector_store.delete_by_file."""
+    """delete_file delegates to vector_store.delete_by_file when file exists."""
+    mock_vs.file_exists.return_value = True
+
     await svc.delete_file("/data/a.docx")
 
+    mock_vs.file_exists.assert_awaited_once_with("/data/a.docx")
     mock_vs.delete_by_file.assert_awaited_once_with("/data/a.docx")
 
 
-async def test_reindex_file(svc: FileService, mock_ingester: AsyncMock) -> None:
+async def test_delete_file_rejects_unknown(svc: FileService, mock_vs: AsyncMock) -> None:
+    """delete_file raises ValueError when file not in knowledge base."""
+    mock_vs.file_exists.return_value = False
+
+    with pytest.raises(ValueError, match="文件不在知识库中"):
+        await svc.delete_file("/data/unknown.docx")
+
+    mock_vs.delete_by_file.assert_not_awaited()
+
+
+async def test_reindex_file(svc: FileService, mock_vs: AsyncMock, mock_ingester: AsyncMock) -> None:
     """reindex_file calls ingester.process_file and returns FileResult."""
+    mock_vs.file_exists.return_value = True
     expected = FileResult(path="/data/a.docx", status="success", chunks_count=5)
     mock_ingester.process_file.return_value = expected
 
     result = await svc.reindex_file("/data/a.docx")
 
+    mock_vs.file_exists.assert_awaited_once_with("/data/a.docx")
     mock_ingester.process_file.assert_awaited_once_with(Path("/data/a.docx"))
     assert result == expected
+
+
+async def test_reindex_file_rejects_unknown(svc: FileService, mock_vs: AsyncMock, mock_ingester: AsyncMock) -> None:
+    """reindex_file raises ValueError when file not in knowledge base."""
+    mock_vs.file_exists.return_value = False
+
+    with pytest.raises(ValueError, match="文件不在知识库中"):
+        await svc.reindex_file("/data/unknown.docx")
+
+    mock_ingester.process_file.assert_not_awaited()
 
 
 async def test_update_classification(svc: FileService, mock_vs: AsyncMock) -> None:

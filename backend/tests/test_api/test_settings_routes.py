@@ -55,7 +55,7 @@ def test_get_online_search_config(client: TestClient) -> None:
     data = response.json()
     assert data["enabled"] is True
     assert data["provider"] == "tavily"
-    assert data["api_key"] == "test-key"
+    assert data["api_key"] == "********"
 
 
 def test_update_online_search_config(client: TestClient) -> None:
@@ -66,7 +66,7 @@ def test_update_online_search_config(client: TestClient) -> None:
     assert response.status_code == 200
     data = response.json()
     assert data["enabled"] is False
-    assert data["api_key"] == "new-key"
+    assert data["api_key"] == "********"
 
 
 def test_test_connection(client: TestClient) -> None:
