@@ -34,9 +34,9 @@ class LocalSearch:
         if filters.doc_types:
             conditions.append({"doc_type": {"$in": filters.doc_types}})
         if filters.date_from:
-            conditions.append({"doc_date": {"$gte": filters.date_from}})
+            conditions.append({"doc_date": {"$gte": filters.date_from.isoformat()}})
         if filters.date_to:
-            conditions.append({"doc_date": {"$lte": filters.date_to}})
+            conditions.append({"doc_date": {"$lte": filters.date_to.isoformat()}})
         if not conditions:
             return None
         if len(conditions) == 1:

@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+from datetime import date
 from enum import Enum
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
 
 class SearchFilter(BaseModel):
     doc_types: list[str] = Field(default_factory=list)
-    date_from: str | None = None
-    date_to: str | None = None
+    date_from: date | None = None
+    date_to: date | None = None
 
 
 class SearchRequest(BaseModel):
@@ -40,10 +42,10 @@ class OnlineSearchItem(BaseModel):
 
 class FileListRequest(BaseModel):
     doc_types: list[str] = Field(default_factory=list)
-    date_from: str | None = None
-    date_to: str | None = None
-    sort_by: str = "file_name"
-    sort_order: str = "asc"
+    date_from: date | None = None
+    date_to: date | None = None
+    sort_by: Literal["file_name", "doc_date", "chunk_count"] = "file_name"
+    sort_order: Literal["asc", "desc"] = "asc"
 
 
 class IndexedFile(BaseModel):

@@ -57,17 +57,13 @@ class FileService:
         if request.doc_types:
             result = [f for f in result if f.doc_type in request.doc_types]
         if request.date_from:
-            result = [f for f in result if f.doc_date and f.doc_date >= request.date_from]
+            result = [f for f in result if f.doc_date and f.doc_date >= request.date_from.isoformat()]
         if request.date_to:
-            result = [f for f in result if f.doc_date and f.doc_date <= request.date_to]
+            result = [f for f in result if f.doc_date and f.doc_date <= request.date_to.isoformat()]
         return result
 
     def _sort(self, files: list[IndexedFile], request: FileListRequest) -> list[IndexedFile]:
-        key_map = {
-            "file_name": "file_name",
-            "doc_date": "doc_date",
-            "chunk_count": "chunk_count",
-        }
-        key = key_map.get(request.sort_by, "file_name")
-        reverse = request.sort_order == "desc"
-        return sorted(files, key=lambda f: getattr(f, key) or "", reverse=reverse)
+        if request.sort_by == "chunk_count":
+            return sorted(files, key=lambda f: f.chunk_count, reverse=request.sort_order == "desc")
+        key = request.sort_by
+        return sorted(files, key=lambda f: getattr(f, key) or "", reverse=request.sort_order == "desc")

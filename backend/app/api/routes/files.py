@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from datetime import date
+from typing import Literal
+
 from fastapi import APIRouter, Depends
 
 from app.api.deps import get_file_service
@@ -14,10 +17,10 @@ _file_service_dep = Depends(get_file_service)
 @router.get("", response_model=list[IndexedFile])
 async def list_files(
     doc_types: str | None = None,
-    date_from: str | None = None,
-    date_to: str | None = None,
-    sort_by: str = "file_name",
-    sort_order: str = "asc",
+    date_from: date | None = None,
+    date_to: date | None = None,
+    sort_by: Literal["file_name", "doc_date", "chunk_count"] = "file_name",
+    sort_order: Literal["asc", "desc"] = "asc",
     file_service: FileService = _file_service_dep,
 ) -> list[IndexedFile]:
     request = FileListRequest(
