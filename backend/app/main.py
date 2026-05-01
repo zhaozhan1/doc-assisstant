@@ -43,40 +43,38 @@ def setup_logging(config: LoggingConfig) -> None:
     root_logger.addHandler(file_handler)
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    config = AppConfig()
-    llm = create_provider(config.llm)
-    embed_llm = create_embed_provider(config.llm)
-    vector_store = VectorStore(config.knowledge_base.db_path, embed_llm)
-    ingester = Ingester(config, llm, vector_store)
-    task_manager = TaskManager(ingester)
-    local_search = LocalSearch(vector_store, embed_llm)
-    online_search = OnlineSearchService.from_config(config.online_search)
-    fusion = Fusion()
-    retriever = Retriever(local_search, online_search, fusion)
-    file_service = FileService(vector_store, ingester)
-    settings_service = SettingsService(config)
-
-    app.state.config = config
-    app.state.llm = llm
-    app.state.embed_llm = embed_llm
-    app.state.vector_store = vector_store
-    app.state.ingester = ingester
-    app.state.task_manager = task_manager
-    app.state.retriever = retriever
-    app.state.file_service = file_service
-    app.state.settings_service = settings_service
-
-    yield
-
-
 def create_app() -> FastAPI:
     config = AppConfig()
     setup_logging(config.logging)
     logger.info("应用启动")
 
-    app = FastAPI(title="公文助手", version="0.1.0", lifespan=lifespan)
+    @asynccontextmanager
+    async def _lifespan(app: FastAPI):
+        llm = create_provider(config.llm)
+        embed_llm = create_embed_provider(config.llm)
+        vector_store = VectorStore(config.knowledge_base.db_path, embed_llm)
+        ingester = Ingester(config, llm, vector_store)
+        task_manager = TaskManager(ingester)
+        local_search = LocalSearch(vector_store, embed_llm)
+        online_search = OnlineSearchService.from_config(config.online_search)
+        fusion = Fusion()
+        retriever = Retriever(local_search, online_search, fusion)
+        file_service = FileService(vector_store, ingester)
+        settings_service = SettingsService(config)
+
+        app.state.config = config
+        app.state.llm = llm
+        app.state.embed_llm = embed_llm
+        app.state.vector_store = vector_store
+        app.state.ingester = ingester
+        app.state.task_manager = task_manager
+        app.state.retriever = retriever
+        app.state.file_service = file_service
+        app.state.settings_service = settings_service
+
+        yield
+
+    app = FastAPI(title="公文助手", version="0.1.0", lifespan=_lifespan)
     app.include_router(health.router)
     app.include_router(retrieval.router)
     app.include_router(files.router)
