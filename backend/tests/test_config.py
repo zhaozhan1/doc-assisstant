@@ -146,3 +146,14 @@ online_search:
         assert config.online_search.api_key == "tvly-test-key"
         assert config.online_search.domains == ["gov.cn", "edu.cn"]
         assert config.online_search.max_results == 5
+
+
+class TestGenerationConfig:
+    def test_generation_config_defaults(self, tmp_path: Path) -> None:
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("{}")
+        config = AppConfig(_yaml_file=str(config_file))
+        assert config.generation.output_format == "docx"
+        assert config.generation.save_path == "./output"
+        assert config.generation.include_sources is True
+        assert config.generation.max_prompt_tokens == 4096

@@ -59,12 +59,20 @@ class OnlineSearchConfig(BaseModel):
     max_results: int = Field(default=3, ge=1, le=10)
 
 
+class GenerationConfig(BaseModel):
+    output_format: str = "docx"
+    save_path: str = "./output"
+    include_sources: bool = True
+    max_prompt_tokens: int = 4096
+
+
 class AppConfig(BaseSettings):
     knowledge_base: KnowledgeBaseConfig = KnowledgeBaseConfig()
     llm: LLMConfig = LLMConfig()
     ocr: OCRConfig = OCRConfig()
     logging: LoggingConfig = LoggingConfig()
     online_search: OnlineSearchConfig = OnlineSearchConfig()
+    generation: GenerationConfig = GenerationConfig()
 
     model_config = SettingsConfigDict(
         yaml_file="config.yaml",

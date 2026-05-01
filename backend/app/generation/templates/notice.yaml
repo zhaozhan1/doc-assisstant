@@ -1,0 +1,23 @@
+id: notice
+name: 通知
+doc_type: notice
+sections:
+  - title: 标题
+    writing_points:
+      - 发文机关名称
+      - 事由概括
+    format_rules:
+      - 居中排版
+  - title: 正文
+    writing_points:
+      - 通知背景和目的
+      - 具体事项和要求
+      - 执行时间和范围
+    format_rules:
+      - 首行缩进两字
+  - title: 落款
+    writing_points:
+      - 发文单位
+      - 成文日期
+    format_rules:
+      - 右对齐

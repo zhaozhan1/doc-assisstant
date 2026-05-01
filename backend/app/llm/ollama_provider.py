@@ -19,6 +19,25 @@ class OllamaProvider(BaseLLMProvider):
         resp.raise_for_status()
         return resp.json()["message"]["content"]
 
+    async def chat_stream(self, messages: list[dict], **kwargs):
+        import json
+
+        async with self._client.stream(
+            "POST",
+            "/api/chat",
+            json={"model": self._chat_model, "messages": messages, "stream": True},
+        ) as resp:
+            resp.raise_for_status()
+            async for line in resp.aiter_lines():
+                if not line:
+                    continue
+                data = json.loads(line)
+                if data.get("done"):
+                    break
+                content = data.get("message", {}).get("content", "")
+                if content:
+                    yield content
+
     async def embed(self, texts: list[str]) -> list[list[float]]:
         resp = await self._client.post(
             "/api/embed",

@@ -1,0 +1,41 @@
+id: report
+name: 报告
+doc_type: report
+sections:
+  - title: 标题
+    writing_points:
+      - 报告单位名称
+      - 报告主题概括
+    format_rules:
+      - 居中排版
+  - title: 报告导语
+    writing_points:
+      - 报告的背景和缘由
+      - 报告的目的和范围
+    format_rules:
+      - 首行缩进两字
+  - title: 主要工作
+    writing_points:
+      - 工作开展情况概述
+      - 取得的主要成绩和数据
+      - 采取的重要举措
+    format_rules:
+      - 首行缩进两字
+  - title: 存在问题
+    writing_points:
+      - 工作中遇到的困难和不足
+      - 问题原因分析
+    format_rules:
+      - 首行缩进两字
+  - title: 下一步计划
+    writing_points:
+      - 后续工作思路和目标
+      - 具体措施和时间安排
+    format_rules:
+      - 首行缩进两字
+  - title: 落款
+    writing_points:
+      - 报告单位
+      - 成文日期
+    format_rules:
+      - 右对齐

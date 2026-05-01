@@ -1,0 +1,23 @@
+id: announcement
+name: 公告
+doc_type: announcement
+sections:
+  - title: 标题
+    writing_points:
+      - 公告主题概括
+      - 发布单位名称
+    format_rules:
+      - 居中排版
+  - title: 正文
+    writing_points:
+      - 公告事项和依据
+      - 具体内容和要求
+      - 生效时间和适用范围
+    format_rules:
+      - 首行缩进两字
+  - title: 落款
+    writing_points:
+      - 发布单位
+      - 发布日期
+    format_rules:
+      - 右对齐

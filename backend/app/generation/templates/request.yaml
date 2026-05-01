@@ -1,0 +1,35 @@
+id: request
+name: 请示
+doc_type: request
+sections:
+  - title: 标题
+    writing_points:
+      - 发文机关名称
+      - 请示事项概括
+    format_rules:
+      - 居中排版
+  - title: 请示缘由
+    writing_points:
+      - 请示的背景和原因
+      - 存在的问题或需要上级决定的事项
+    format_rules:
+      - 首行缩进两字
+  - title: 请示事项
+    writing_points:
+      - 具体请示内容
+      - 拟采取的措施或方案
+      - 需要上级批复的具体问题
+    format_rules:
+      - 首行缩进两字
+  - title: 结尾
+    writing_points:
+      - 妥当性请示语
+      - 请求批示
+    format_rules:
+      - 首行缩进两字
+  - title: 落款
+    writing_points:
+      - 请示单位
+      - 成文日期
+    format_rules:
+      - 右对齐

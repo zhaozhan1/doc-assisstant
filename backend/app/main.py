@@ -7,9 +7,15 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
-from app.api.routes import files, health, retrieval, settings
+from app.api.routes import files, generation, health, retrieval, settings, templates
 from app.config import AppConfig, LoggingConfig
 from app.db.vector_store import VectorStore
+from app.generation.docx_formatter import DocxFormatter
+from app.generation.intent_parser import IntentParser
+from app.generation.prompt_builder import PromptBuilder
+from app.generation.template_manager import TemplateManager
+from app.generation.writer import Writer
+from app.generation.writer_service import WriterService
 from app.ingestion.ingester import Ingester
 from app.llm.factory import create_embed_provider, create_provider
 from app.retrieval.file_service import FileService
@@ -72,6 +78,26 @@ def create_app() -> FastAPI:
         app.state.file_service = file_service
         app.state.settings_service = settings_service
 
+        intent_parser = IntentParser(llm)
+        template_mgr = TemplateManager(
+            builtin_dir=Path(__file__).parent / "generation" / "templates",
+            custom_dir=Path(config.generation.save_path) / "templates",
+        )
+        prompt_builder = PromptBuilder(max_tokens=config.generation.max_prompt_tokens)
+        gen_writer = Writer(llm)
+        docx_formatter = DocxFormatter(output_dir=Path(config.generation.save_path))
+        writer_service = WriterService(
+            intent_parser,
+            prompt_builder,
+            template_mgr,
+            gen_writer,
+            docx_formatter,
+            retriever,
+        )
+
+        app.state.writer_service = writer_service
+        app.state.template_mgr = template_mgr
+
         yield
 
     app = FastAPI(title="公文助手", version="0.1.0", lifespan=_lifespan)
@@ -79,6 +105,8 @@ def create_app() -> FastAPI:
     app.include_router(retrieval.router)
     app.include_router(files.router)
     app.include_router(settings.router)
+    app.include_router(generation.router)
+    app.include_router(templates.router)
 
     return app
 

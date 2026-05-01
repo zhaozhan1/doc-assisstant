@@ -1,0 +1,41 @@
+id: minutes
+name: 会议纪要
+doc_type: minutes
+sections:
+  - title: 标题
+    writing_points:
+      - 会议名称
+      - 纪要字样标识
+    format_rules:
+      - 居中排版
+  - title: 会议信息
+    writing_points:
+      - 会议时间和地点
+      - 主持人和参会人员
+      - 会议议题概述
+    format_rules:
+      - 首行缩进两字
+  - title: 议题一
+    writing_points:
+      - 议题内容和汇报要点
+      - 讨论情况和各方意见
+    format_rules:
+      - 首行缩进两字
+  - title: 议题二
+    writing_points:
+      - 议题内容和汇报要点
+      - 讨论情况和各方意见
+    format_rules:
+      - 首行缩进两字
+  - title: 决议事项
+    writing_points:
+      - 会议形成的决定和决议
+      - 责任分工和完成时限
+    format_rules:
+      - 首行缩进两字
+  - title: 落款
+    writing_points:
+      - 记录人
+      - 整理日期
+    format_rules:
+      - 右对齐

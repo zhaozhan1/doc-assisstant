@@ -18,5 +18,14 @@ class ClaudeProvider(BaseLLMProvider):
         )
         return response.content[0].text
 
+    async def chat_stream(self, messages: list[dict], **kwargs):
+        async with self._client.messages.stream(
+            model=self._model,
+            max_tokens=4096,
+            messages=messages,
+        ) as stream:
+            async for text in stream.text_stream:
+                yield text
+
     async def embed(self, texts: list[str]) -> list[list[float]]:
         raise NotImplementedError("Claude 不支持 embedding，请配置 Ollama 作为 embed Provider")

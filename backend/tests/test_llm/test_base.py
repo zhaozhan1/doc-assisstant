@@ -25,6 +25,10 @@ class DummyProvider(BaseLLMProvider):
     async def chat(self, messages: list[dict], **kwargs) -> str:
         return "公告"
 
+    async def chat_stream(self, messages: list[dict], **kwargs):
+        yield "公"
+        yield "告"
+
     async def embed(self, texts: list[str]) -> list[list[float]]:
         return [[0.1]]
 
