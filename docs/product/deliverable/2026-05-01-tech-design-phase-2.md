@@ -193,7 +193,7 @@ class OnlineSearchConfigUpdate(BaseModel):
     domains: list[str] | None = None
     max_results: int | None = None
 
-class TestConnectionResult(BaseModel):
+class ConnectionTestResult(BaseModel):
     success: bool
     message: str              # 成功提示或错误信息
 ```
@@ -465,7 +465,7 @@ class SettingsService:
     def update_online_search_config(self, update: OnlineSearchConfigUpdate) -> OnlineSearchConfig:
         """更新内存配置 + 写回 config.yaml"""
 
-    async def test_connection(self, config: OnlineSearchConfigUpdate) -> TestConnectionResult:
+    async def test_connection(self, config: OnlineSearchConfigUpdate) -> ConnectionTestResult:
         """用传入配置临时创建 Provider，验证可用性"""
 ```
 
