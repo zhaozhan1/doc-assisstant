@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 公文助手（Doc-Assistant）— 本地化政务公文知识库与 AI 写作辅助系统。单用户、单机部署，从历史文档自动构建知识库，辅助生成符合公文规范的初稿。
 
-**当前状态**：阶段一（项目基础+文档解析）编码完成，待代码审查。
+**当前状态**：阶段二（检索引擎+知识库管理）编码完成，待合并到 main。
 
 ## 常用命令
 
@@ -65,6 +65,11 @@ pnpm lint                         # Lint 检查（TypeScript Strict）
 - **后端（Python）**：遵循 PEP8 规范，使用 `ruff` 作为 Linter 和 Formatter。每次代码审查前必须通过 `ruff check` 和 `ruff format --check`
 - **前端（TypeScript）**：遵循 TypeScript Strict 规范（`"strict": true`），使用 ESLint + Prettier。每次代码审查前必须通过 `pnpm lint`
 - **Lint 前置**：任何代码审查（包括 `/code-review`）之前，必须先确保 Lint 检查全部通过。Lint 不通过的代码不进入审查流程
+
+## Shell 命令规范
+- 禁止使用 `cd xxx && git ...` 形式。
+- 需要在子目录执行 git 时，始终使用 `git -C <路径> <命令>` 替代。
+- 例如：git -C packages/api status（而非 cd packages/api && git status）
 
 ## 设计文档
 

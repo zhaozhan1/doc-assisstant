@@ -39,6 +39,12 @@ class Ingester:
                 meta = self.metadata_extractor.extract(doc)
                 meta.doc_type = await self.classifier.classify(doc.text)
 
+                # Global dedup: same content at a different path
+                existing_path = await self.vector_store.find_by_md5(meta.file_md5)
+                if existing_path and existing_path != str(fi.path):
+                    logger.info("MD5 去重: 内容已存在于 %s，删除旧路径", existing_path)
+                    await self.vector_store.delete_by_file(existing_path)
+
                 existing = await self.vector_store.check_file_exists(str(fi.path), meta.file_md5)
                 if existing:
                     continue
@@ -46,6 +52,7 @@ class Ingester:
                 chunks = self.chunker.split(doc, meta)
                 for c in chunks:
                     c.metadata["file_md5"] = meta.file_md5
+                    c.metadata["import_time"] = meta.import_time.isoformat()
                 await self.vector_store.delete_by_file(str(fi.path))
                 await self.vector_store.upsert(chunks)
                 total_chunks += len(chunks)

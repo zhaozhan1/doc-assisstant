@@ -1,12 +1,24 @@
 from __future__ import annotations
 
 import logging
+from contextlib import asynccontextmanager
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from fastapi import FastAPI
 
+from app.api.routes import files, health, retrieval, settings
 from app.config import AppConfig, LoggingConfig
+from app.db.vector_store import VectorStore
+from app.ingestion.ingester import Ingester
+from app.llm.factory import create_embed_provider, create_provider
+from app.retrieval.file_service import FileService
+from app.retrieval.fusion import Fusion
+from app.retrieval.local_search import LocalSearch
+from app.retrieval.online_search import OnlineSearchService
+from app.retrieval.retriever import Retriever
+from app.settings_service import SettingsService
+from app.task_manager import TaskManager
 
 logger = logging.getLogger(__name__)
 
@@ -36,11 +48,37 @@ def create_app() -> FastAPI:
     setup_logging(config.logging)
     logger.info("应用启动")
 
-    app = FastAPI(title="公文助手", version="0.1.0")
+    @asynccontextmanager
+    async def _lifespan(app: FastAPI):
+        llm = create_provider(config.llm)
+        embed_llm = create_embed_provider(config.llm)
+        vector_store = VectorStore(config.knowledge_base.db_path, embed_llm)
+        ingester = Ingester(config, llm, vector_store)
+        task_manager = TaskManager(ingester)
+        local_search = LocalSearch(vector_store, embed_llm)
+        online_search = OnlineSearchService.from_config(config.online_search)
+        fusion = Fusion()
+        retriever = Retriever(local_search, online_search, fusion)
+        file_service = FileService(vector_store, ingester)
+        settings_service = SettingsService(config)
 
-    @app.get("/health")
-    async def health() -> dict:
-        return {"status": "ok"}
+        app.state.config = config
+        app.state.llm = llm
+        app.state.embed_llm = embed_llm
+        app.state.vector_store = vector_store
+        app.state.ingester = ingester
+        app.state.task_manager = task_manager
+        app.state.retriever = retriever
+        app.state.file_service = file_service
+        app.state.settings_service = settings_service
+
+        yield
+
+    app = FastAPI(title="公文助手", version="0.1.0", lifespan=_lifespan)
+    app.include_router(health.router)
+    app.include_router(retrieval.router)
+    app.include_router(files.router)
+    app.include_router(settings.router)
 
     return app
 
