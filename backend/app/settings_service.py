@@ -34,10 +34,11 @@ class SettingsService:
         )
 
     def _write_config(self) -> None:
-        if not self._config_path.exists():
-            return
-        with open(self._config_path, encoding="utf-8") as f:
-            data = yaml.safe_load(f) or {}
+        data = {}
+        if self._config_path.exists():
+            with open(self._config_path, encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
         data["online_search"] = self._config.online_search.model_dump()
+        self._config_path.parent.mkdir(parents=True, exist_ok=True)
         with open(self._config_path, "w", encoding="utf-8") as f:
             yaml.dump(data, f, default_flow_style=False, allow_unicode=True)

@@ -56,7 +56,7 @@ class OnlineSearchConfig(BaseModel):
     api_key: str = ""
     base_url: str = ""
     domains: list[str] = ["gov.cn"]
-    max_results: int = 3
+    max_results: int = Field(default=3, ge=1, le=10)
 
 
 class AppConfig(BaseSettings):

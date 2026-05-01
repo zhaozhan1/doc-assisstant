@@ -14,8 +14,8 @@ class SearchFilter(BaseModel):
 
 
 class SearchRequest(BaseModel):
-    query: str
-    top_k: int = 10
+    query: str = Field(..., max_length=1000)
+    top_k: int = Field(default=10, ge=1, le=50)
     local_only: bool = False
     filter: SearchFilter | None = None
 

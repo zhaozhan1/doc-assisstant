@@ -117,7 +117,7 @@ class TestListAllChunks:
 
         results = await vs_with_mock_collection.list_all_chunks()
 
-        mock_collection.get.assert_called_once_with(include=["documents", "metadatas"])
+        mock_collection.get.assert_called_once_with(include=["metadatas", "documents"])
         assert len(results) == 2
         assert all(isinstance(r, SearchResult) for r in results)
         assert results[0].text == "chunk0"

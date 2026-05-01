@@ -69,11 +69,17 @@ class VectorStore:
         existing_md5 = results["metadatas"][0].get("file_md5", "")
         return existing_md5 == file_md5
 
-    async def list_all_chunks(self) -> list[SearchResult]:
-        results = self._collection.get(include=["documents", "metadatas"])
+    async def list_all_chunks(self, include_documents: bool = True) -> list[SearchResult]:
+        includes: list[str] = ["metadatas"]
+        if include_documents:
+            includes.append("documents")
+        results = self._collection.get(include=includes)
+        if not results["ids"]:
+            return []
+        docs = results.get("documents") or [""] * len(results["ids"])
         return [
-            SearchResult(text=doc, metadata=meta, score=0.0)
-            for doc, meta in zip(results["documents"], results["metadatas"], strict=False)
+            SearchResult(text=doc, metadata=meta or {}, score=0.0)
+            for doc, meta in zip(docs, results["metadatas"], strict=False)
         ]
 
     async def update_file_metadata(self, source_file: str, updates: dict) -> None:
@@ -84,6 +90,10 @@ class VectorStore:
             ids=results["ids"],
             metadatas=[updates] * len(results["ids"]),
         )
+
+    async def file_exists(self, source_file: str) -> bool:
+        results = self._collection.get(where={"source_file": source_file}, limit=1)
+        return bool(results["ids"])
 
     async def find_by_md5(self, file_md5: str) -> str | None:
         results = self._collection.get(where={"file_md5": file_md5})

@@ -18,7 +18,7 @@ class FileService:
         self._ingester = ingester
 
     async def list_files(self, request: FileListRequest) -> list[IndexedFile]:
-        all_chunks = await self._vs.list_all_chunks()
+        all_chunks = await self._vs.list_all_chunks(include_documents=False)
         groups: dict[str, list] = defaultdict(list)
         for chunk in all_chunks:
             src = chunk.metadata.get("source_file", "")
@@ -44,9 +44,13 @@ class FileService:
         return files
 
     async def delete_file(self, source_file: str) -> None:
+        if not await self._vs.file_exists(source_file):
+            raise ValueError(f"文件不在知识库中: {source_file}")
         await self._vs.delete_by_file(source_file)
 
     async def reindex_file(self, source_file: str) -> FileResult:
+        if not await self._vs.file_exists(source_file):
+            raise ValueError(f"文件不在知识库中: {source_file}")
         return await self._ingester.process_file(Path(source_file))
 
     async def update_classification(self, source_file: str, doc_type: str) -> None:
