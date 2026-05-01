@@ -107,8 +107,9 @@ class DocxFormatter:
                 run.font.size = font_size
 
     def _make_filename(self, doc_type: str, topic: str) -> str:
+        safe_doc_type = re.sub(r"[^\w]", "", doc_type)[:20]
         safe_topic = re.sub(r"[^\w\u4e00-\u9fff]", "", topic)[:20]
-        return f"{doc_type}_{safe_topic}_{date.today().isoformat()}.docx"
+        return f"{safe_doc_type}_{safe_topic}_{date.today().isoformat()}.docx"
 
     def _detect_fonts(self) -> dict:
         available = set()

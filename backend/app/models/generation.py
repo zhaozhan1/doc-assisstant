@@ -20,9 +20,9 @@ class TemplateSection(BaseModel):
 
 class TemplateDef(BaseModel):
     id: str = Field(pattern=r"^[a-zA-Z0-9_-]+$")
-    name: str
-    doc_type: str
-    sections: list[TemplateSection] = Field(default_factory=list)
+    name: str = Field(max_length=100)
+    doc_type: str = Field(max_length=50)
+    sections: list[TemplateSection] = Field(default_factory=list, max_length=50)
     is_builtin: bool = True
 
 
@@ -42,8 +42,8 @@ class SourceAttribution(BaseModel):
 
 class GenerationRequest(BaseModel):
     description: str = Field(..., min_length=1, max_length=2000)
-    selected_refs: list[str] | None = None
-    requirements: str | None = None
+    selected_refs: list[str] | None = Field(default=None, max_length=50)
+    requirements: str | None = Field(default=None, max_length=2000)
     template_id: str | None = Field(default=None, pattern=r"^[a-zA-Z0-9_-]+$")
 
 
