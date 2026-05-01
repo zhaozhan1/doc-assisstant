@@ -1,0 +1,36 @@
+id: plan
+name: 方案
+doc_type: plan
+sections:
+  - title: 标题
+    writing_points:
+      - 方案主题
+      - 制定单位名称
+    format_rules:
+      - 居中排版
+  - title: 背景和目标
+    writing_points:
+      - 制定方案的背景和依据
+      - 工作目标和预期成果
+    format_rules:
+      - 首行缩进两字
+  - title: 实施步骤
+    writing_points:
+      - 各阶段工作任务和时间安排
+      - 责任分工和具体措施
+      - 关键节点和里程碑
+    format_rules:
+      - 首行缩进两字
+  - title: 保障措施
+    writing_points:
+      - 组织保障和人员安排
+      - 经费保障和资源配置
+      - 监督检查和考核机制
+    format_rules:
+      - 首行缩进两字
+  - title: 落款
+    writing_points:
+      - 制定单位
+      - 成文日期
+    format_rules:
+      - 右对齐

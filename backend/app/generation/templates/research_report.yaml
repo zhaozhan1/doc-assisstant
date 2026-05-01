@@ -1,0 +1,46 @@
+id: research_report
+name: 调研报告
+doc_type: research_report
+sections:
+  - title: 标题
+    writing_points:
+      - 调研主题
+      - 调研时间和范围
+    format_rules:
+      - 居中排版
+  - title: 调研背景
+    writing_points:
+      - 调研目的和意义
+      - 调研缘由和课题来源
+    format_rules:
+      - 首行缩进两字
+  - title: 调研方法
+    writing_points:
+      - 调研对象和样本选择
+      - 调研方式和工具
+    format_rules:
+      - 首行缩进两字
+  - title: 调研发现
+    writing_points:
+      - 主要事实和数据
+      - 典型案例和现象描述
+    format_rules:
+      - 首行缩进两字
+  - title: 分析与建议
+    writing_points:
+      - 问题分析和原因探讨
+      - 对策建议和改进措施
+    format_rules:
+      - 首行缩进两字
+  - title: 结论
+    writing_points:
+      - 调研结论概述
+      - 后续工作建议
+    format_rules:
+      - 首行缩进两字
+  - title: 落款
+    writing_points:
+      - 调研组或调研人
+      - 成文日期
+    format_rules:
+      - 右对齐

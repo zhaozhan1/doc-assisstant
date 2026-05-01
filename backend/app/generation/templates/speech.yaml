@@ -1,0 +1,29 @@
+id: speech
+name: 领导讲话稿
+doc_type: speech
+sections:
+  - title: 称呼
+    writing_points:
+      - 与会人员称谓
+      - 适当的尊称和问候
+    format_rules:
+      - 顶格排版
+  - title: 开场白
+    writing_points:
+      - 会议背景和意义
+      - 讲话目的和主题引出
+    format_rules:
+      - 首行缩进两字
+  - title: 主体内容
+    writing_points:
+      - 核心观点和论述
+      - 工作部署和要求
+      - 政策解读和指示精神
+    format_rules:
+      - 首行缩进两字
+  - title: 结尾号召
+    writing_points:
+      - 总结要点和期望
+      - 号召性和鼓舞性语言
+    format_rules:
+      - 首行缩进两字

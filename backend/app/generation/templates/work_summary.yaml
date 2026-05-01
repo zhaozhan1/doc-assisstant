@@ -1,0 +1,47 @@
+id: work_summary
+name: 工作总结
+doc_type: work_summary
+sections:
+  - title: 标题
+    writing_points:
+      - 总结主题
+      - 涵盖时间范围
+    format_rules:
+      - 居中排版
+  - title: 工作概述
+    writing_points:
+      - 总体工作概况
+      - 核心数据和关键指标
+    format_rules:
+      - 首行缩进两字
+  - title: 主要成绩
+    writing_points:
+      - 重点工作完成情况
+      - 创新做法和亮点工作
+      - 获得的荣誉和表彰
+    format_rules:
+      - 首行缩进两字
+  - title: 存在问题
+    writing_points:
+      - 不足之处和薄弱环节
+      - 客观原因分析
+    format_rules:
+      - 首行缩进两字
+  - title: 经验教训
+    writing_points:
+      - 工作中的经验和启示
+      - 改进方向和建议
+    format_rules:
+      - 首行缩进两字
+  - title: 下步计划
+    writing_points:
+      - 下阶段工作目标
+      - 重点任务和保障措施
+    format_rules:
+      - 首行缩进两字
+  - title: 落款
+    writing_points:
+      - 总结单位或个人
+      - 成文日期
+    format_rules:
+      - 右对齐

@@ -1,0 +1,47 @@
+id: program
+name: 规划
+doc_type: program
+sections:
+  - title: 标题
+    writing_points:
+      - 规划主题
+      - 覆盖时间范围
+    format_rules:
+      - 居中排版
+  - title: 现状分析
+    writing_points:
+      - 当前工作基础和现状
+      - 面临的形势和挑战
+    format_rules:
+      - 首行缩进两字
+  - title: 总体目标
+    writing_points:
+      - 指导思想和基本原则
+      - 总体目标和阶段性目标
+    format_rules:
+      - 首行缩进两字
+  - title: 重点任务
+    writing_points:
+      - 核心任务和具体内容
+      - 各任务之间的逻辑关系
+    format_rules:
+      - 首行缩进两字
+  - title: 实施步骤
+    writing_points:
+      - 分阶段实施安排
+      - 各阶段时间节点和任务
+    format_rules:
+      - 首行缩进两字
+  - title: 保障措施
+    writing_points:
+      - 组织领导和协调机制
+      - 政策支持和制度保障
+      - 资金保障和人才支撑
+    format_rules:
+      - 首行缩进两字
+  - title: 落款
+    writing_points:
+      - 编制单位
+      - 成文日期
+    format_rules:
+      - 右对齐

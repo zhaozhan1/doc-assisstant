@@ -1,0 +1,47 @@
+id: contract
+name: 合同
+doc_type: contract
+sections:
+  - title: 标题
+    writing_points:
+      - 合同类型和名称
+      - 合同编号
+    format_rules:
+      - 居中排版
+  - title: 当事人信息
+    writing_points:
+      - 甲方名称、地址、法定代表人
+      - 乙方名称、地址、法定代表人
+    format_rules:
+      - 首行缩进两字
+  - title: 合同标的
+    writing_points:
+      - 合同标的物或服务内容
+      - 数量、质量和规格要求
+    format_rules:
+      - 首行缩进两字
+  - title: 权利义务
+    writing_points:
+      - 甲方权利和义务
+      - 乙方权利和义务
+      - 价款或报酬及支付方式
+    format_rules:
+      - 首行缩进两字
+  - title: 违约责任
+    writing_points:
+      - 违约情形和责任承担
+      - 赔偿标准和计算方式
+    format_rules:
+      - 首行缩进两字
+  - title: 争议解决
+    writing_points:
+      - 争议解决方式（协商、仲裁或诉讼）
+      - 适用法律和管辖约定
+    format_rules:
+      - 首行缩进两字
+  - title: 签署页
+    writing_points:
+      - 甲方签章和签署日期
+      - 乙方签章和签署日期
+    format_rules:
+      - 双栏并列排版

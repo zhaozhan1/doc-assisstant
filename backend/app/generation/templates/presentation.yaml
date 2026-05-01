@@ -1,0 +1,41 @@
+id: presentation
+name: 汇报PPT
+doc_type: presentation
+sections:
+  - title: 封面
+    writing_points:
+      - 汇报主题标题
+      - 汇报人和单位信息
+      - 汇报日期
+    format_rules:
+      - 居中排版
+  - title: 目录
+    writing_points:
+      - 汇报内容纲要
+      - 各部分标题列表
+    format_rules:
+      - 列表排版
+  - title: 背景
+    writing_points:
+      - 工作背景和任务来源
+      - 目标和意义
+    format_rules:
+      - 要点式呈现
+  - title: 核心内容
+    writing_points:
+      - 主要工作和关键举措
+      - 重点成果和创新做法
+    format_rules:
+      - 要点式呈现
+  - title: 数据支撑
+    writing_points:
+      - 关键数据指标和对比
+      - 图表展示要点说明
+    format_rules:
+      - 图文结合排版
+  - title: 总结展望
+    writing_points:
+      - 成果总结和经验提炼
+      - 下一步工作方向和目标
+    format_rules:
+      - 要点式呈现
