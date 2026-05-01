@@ -8,6 +8,12 @@ class BaseLLMProvider(ABC):
     async def chat(self, messages: list[dict], **kwargs) -> str: ...
 
     @abstractmethod
+    async def chat_stream(self, messages: list[dict], **kwargs):
+        """流式对话，返回 AsyncGenerator[str, None]。"""
+        ...
+        yield
+
+    @abstractmethod
     async def embed(self, texts: list[str]) -> list[list[float]]: ...
 
     async def classify(self, text: str, labels: list[str]) -> str:

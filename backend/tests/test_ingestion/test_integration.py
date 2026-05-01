@@ -18,6 +18,10 @@ class MockLLMProvider(BaseLLMProvider):
     async def chat(self, messages: list[dict], **kwargs) -> str:
         return "通知"
 
+    async def chat_stream(self, messages: list[dict], **kwargs):
+        yield "通"
+        yield "知"
+
     async def embed(self, texts: list[str]) -> list[list[float]]:
         return [[0.1] * 8 for _ in texts]
 
