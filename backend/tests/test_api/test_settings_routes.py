@@ -7,7 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.config import OnlineSearchConfig
-from app.models.search import TestConnectionResult
+from app.models.search import ConnectionTestResult
 
 
 @pytest.fixture
@@ -39,7 +39,7 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
         max_results=3,
     )
     mock_settings.test_connection = AsyncMock(
-        return_value=TestConnectionResult(success=True, message="连接成功"),
+        return_value=ConnectionTestResult(success=True, message="连接成功"),
     )
 
     app.state.retriever = AsyncMock()

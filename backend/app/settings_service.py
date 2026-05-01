@@ -6,7 +6,7 @@ from pathlib import Path
 import yaml
 
 from app.config import AppConfig, OnlineSearchConfig
-from app.models.search import OnlineSearchConfigUpdate, TestConnectionResult
+from app.models.search import ConnectionTestResult, OnlineSearchConfigUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +27,8 @@ class SettingsService:
         self._write_config()
         return current
 
-    async def test_connection(self, config: OnlineSearchConfigUpdate) -> TestConnectionResult:
-        return TestConnectionResult(
+    async def test_connection(self, config: OnlineSearchConfigUpdate) -> ConnectionTestResult:
+        return ConnectionTestResult(
             success=False,
             message=f"Provider '{self._config.online_search.provider}' 尚未实现，无法测试连接",
         )

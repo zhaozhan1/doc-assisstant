@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import Enum
 
 from pydantic import BaseModel, Field
 
@@ -18,7 +18,7 @@ class SearchRequest(BaseModel):
     filter: SearchFilter | None = None
 
 
-class SourceType(StrEnum):
+class SourceType(str, Enum):
     LOCAL = "local"
     ONLINE = "online"
 
@@ -69,6 +69,6 @@ class OnlineSearchConfigUpdate(BaseModel):
     max_results: int | None = None
 
 
-class TestConnectionResult(BaseModel):
+class ConnectionTestResult(BaseModel):
     success: bool
     message: str

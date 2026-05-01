@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 
 from app.api.deps import get_settings_service
 from app.config import OnlineSearchConfig
-from app.models.search import OnlineSearchConfigUpdate, TestConnectionResult
+from app.models.search import ConnectionTestResult, OnlineSearchConfigUpdate
 from app.settings_service import SettingsService
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
@@ -27,9 +27,9 @@ async def update_online_search_config(
     return service.update_online_search_config(update)
 
 
-@router.post("/online-search/test-connection", response_model=TestConnectionResult)
+@router.post("/online-search/test-connection", response_model=ConnectionTestResult)
 async def test_connection(
     config: OnlineSearchConfigUpdate,
     service: SettingsService = _settings_dep,
-) -> TestConnectionResult:
+) -> ConnectionTestResult:
     return await service.test_connection(config)
