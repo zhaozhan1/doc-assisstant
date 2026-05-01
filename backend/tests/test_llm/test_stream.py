@@ -18,20 +18,19 @@ class TestOllamaChatStream:
     @respx.mock
     @pytest.mark.asyncio
     async def test_yields_content_tokens(self) -> None:
-        """chat_stream should yield individual content tokens from SSE lines."""
+        """chat_stream should yield individual content tokens from NDJSON lines."""
         provider = OllamaProvider(
             base_url="http://localhost:11434",
             chat_model="qwen2.5:14b",
             embed_model="bge-large-zh-v1.5",
         )
 
-        # Build a streaming response body with SSE lines
-        sse_lines = [
-            'data: {"message":{"content":"你"},"done":false}',
-            'data: {"message":{"content":"好"},"done":false}',
-            'data: {"done":true}',
+        ndjson_lines = [
+            '{"message":{"content":"你"},"done":false}',
+            '{"message":{"content":"好"},"done":false}',
+            '{"done":true}',
         ]
-        body = "\n".join(sse_lines)
+        body = "\n".join(ndjson_lines)
 
         route = respx.post("http://localhost:11434/api/chat")
         route.mock(
@@ -62,7 +61,7 @@ class TestOllamaChatStream:
         route.mock(
             return_value=httpx.Response(
                 200,
-                content=b'data: {"done":true}\n',
+                content=b'{"done":true}\n',
                 headers={"content-type": "application/x-ndjson"},
             )
         )

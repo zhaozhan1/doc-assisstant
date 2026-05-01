@@ -29,9 +29,9 @@ class OllamaProvider(BaseLLMProvider):
         ) as resp:
             resp.raise_for_status()
             async for line in resp.aiter_lines():
-                if not line.startswith("data:"):
+                if not line:
                     continue
-                data = json.loads(line[5:].strip())
+                data = json.loads(line)
                 if data.get("done"):
                     break
                 content = data.get("message", {}).get("content", "")

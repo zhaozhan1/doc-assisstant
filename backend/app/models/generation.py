@@ -19,7 +19,7 @@ class TemplateSection(BaseModel):
 
 
 class TemplateDef(BaseModel):
-    id: str
+    id: str = Field(pattern=r"^[a-zA-Z0-9_-]+$")
     name: str
     doc_type: str
     sections: list[TemplateSection] = Field(default_factory=list)
@@ -44,7 +44,7 @@ class GenerationRequest(BaseModel):
     description: str = Field(..., min_length=1, max_length=2000)
     selected_refs: list[str] | None = None
     requirements: str | None = None
-    template_id: str | None = None
+    template_id: str | None = Field(default=None, pattern=r"^[a-zA-Z0-9_-]+$")
 
 
 class GenerationResult(BaseModel):

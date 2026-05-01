@@ -88,7 +88,7 @@ class DocxFormatter:
             elif line.startswith("## "):
                 structure.append({"type": "heading1", "text": line[3:]})
             elif line.startswith("### "):
-                structure.append({"type": "heading2", "text": line[4:]})
+                structure.append({"type": "heading3", "text": line[4:]})
             else:
                 structure.append({"type": "body", "text": line})
         return structure

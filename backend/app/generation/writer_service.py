@@ -38,7 +38,7 @@ class WriterService:
         search_results = await self._retriever.search(SearchRequest(query=" ".join(intent.keywords), top_k=5))
         context = PromptContext(
             intent=intent,
-            style_refs=search_results[:5],
+            style_refs=[r for r in search_results[:5] if r.source_type == SourceType.LOCAL],
             policy_refs=[r for r in search_results if r.source_type == SourceType.ONLINE],
             template=template,
         )
@@ -82,8 +82,8 @@ class WriterService:
         search_results = await self._retriever.search(SearchRequest(query=" ".join(intent.keywords), top_k=5))
         context = PromptContext(
             intent=intent,
-            style_refs=search_results[:5],
-            policy_refs=[],
+            style_refs=[r for r in search_results[:5] if r.source_type == SourceType.LOCAL],
+            policy_refs=[r for r in search_results if r.source_type == SourceType.ONLINE],
             template=template,
         )
         messages = self._prompt_builder.build(context)
@@ -100,7 +100,12 @@ class WriterService:
         if templates:
             return templates[0]
         templates = self._template_mgr.list_templates(doc_type="report")
-        return templates[0]
+        if templates:
+            return templates[0]
+        all_templates = self._template_mgr.list_templates()
+        if all_templates:
+            return all_templates[0]
+        raise FileNotFoundError("没有可用的公文模板")
 
     async def _fetch_selected_refs(self, ref_ids: list[str]) -> list:
         if not ref_ids:
