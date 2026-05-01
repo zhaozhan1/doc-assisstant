@@ -98,3 +98,51 @@ llm:
         config_file.write_text("{}")
         config = AppConfig(_yaml_file=str(config_file))
         assert config.llm.default_provider == "ollama"
+
+
+class TestEmbedProvider:
+    def test_llm_config_has_embed_provider(self, tmp_path: Path) -> None:
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("{}")
+        config = AppConfig(_yaml_file=str(config_file))
+        assert config.llm.embed_provider == "ollama"
+
+    def test_embed_provider_from_yaml(self, tmp_path: Path) -> None:
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("""
+llm:
+  embed_provider: "ollama"
+""")
+        config = AppConfig(_yaml_file=str(config_file))
+        assert config.llm.embed_provider == "ollama"
+
+
+class TestOnlineSearchConfig:
+    def test_online_search_config_defaults(self, tmp_path: Path) -> None:
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("{}")
+        config = AppConfig(_yaml_file=str(config_file))
+        assert config.online_search.enabled is False
+        assert config.online_search.provider == "tavily"
+        assert config.online_search.api_key == ""
+        assert config.online_search.base_url == ""
+        assert config.online_search.domains == ["gov.cn"]
+        assert config.online_search.max_results == 3
+
+    def test_app_config_has_online_search(self, tmp_path: Path) -> None:
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("""
+online_search:
+  enabled: true
+  provider: "tavily"
+  api_key: "tvly-test-key"
+  domains:
+    - "gov.cn"
+    - "edu.cn"
+  max_results: 5
+""")
+        config = AppConfig(_yaml_file=str(config_file))
+        assert config.online_search.enabled is True
+        assert config.online_search.api_key == "tvly-test-key"
+        assert config.online_search.domains == ["gov.cn", "edu.cn"]
+        assert config.online_search.max_results == 5

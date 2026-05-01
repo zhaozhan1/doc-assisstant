@@ -35,6 +35,7 @@ class ClaudeConfig(BaseModel):
 
 class LLMConfig(BaseModel):
     default_provider: Literal["ollama", "claude"] = "ollama"
+    embed_provider: Literal["ollama"] = "ollama"
     providers: dict[str, OllamaConfig | ClaudeConfig] = {
         "ollama": OllamaConfig(),
     }
@@ -49,11 +50,21 @@ class LoggingConfig(BaseModel):
     file: str = "./logs/app.log"
 
 
+class OnlineSearchConfig(BaseModel):
+    enabled: bool = False
+    provider: str = "tavily"
+    api_key: str = ""
+    base_url: str = ""
+    domains: list[str] = ["gov.cn"]
+    max_results: int = 3
+
+
 class AppConfig(BaseSettings):
     knowledge_base: KnowledgeBaseConfig = KnowledgeBaseConfig()
     llm: LLMConfig = LLMConfig()
     ocr: OCRConfig = OCRConfig()
     logging: LoggingConfig = LoggingConfig()
+    online_search: OnlineSearchConfig = OnlineSearchConfig()
 
     model_config = SettingsConfigDict(
         yaml_file="config.yaml",
