@@ -13,6 +13,8 @@ from app.config import AppConfig, LoggingConfig
 from app.db.vector_store import VectorStore
 from app.generation.docx_formatter import DocxFormatter
 from app.generation.intent_parser import IntentParser
+from app.generation.pptx_generator import PptxGenerator
+from app.generation.pptx_task_manager import PptxTaskManager
 from app.generation.prompt_builder import PromptBuilder
 from app.generation.template_manager import TemplateManager
 from app.generation.writer import Writer
@@ -98,6 +100,11 @@ def create_app() -> FastAPI:
 
         app.state.writer_service = writer_service
         app.state.template_mgr = template_mgr
+
+        pptx_generator = PptxGenerator(llm=llm, output_dir=Path(config.generation.save_path))
+        pptx_task_manager = PptxTaskManager()
+        app.state.pptx_generator = pptx_generator
+        app.state.pptx_task_manager = pptx_task_manager
 
         yield
 

@@ -67,6 +67,11 @@ class GenerationConfig(BaseModel):
     word_template_path: str = ""
 
 
+class PptxConfig(BaseModel):
+    max_chapters: int = Field(default=30, ge=5, le=100)
+    pptx_template_path: str = ""
+
+
 class AppConfig(BaseSettings):
     knowledge_base: KnowledgeBaseConfig = KnowledgeBaseConfig()
     llm: LLMConfig = LLMConfig()
@@ -74,6 +79,7 @@ class AppConfig(BaseSettings):
     logging: LoggingConfig = LoggingConfig()
     online_search: OnlineSearchConfig = OnlineSearchConfig()
     generation: GenerationConfig = GenerationConfig()
+    pptx: PptxConfig = PptxConfig()
 
     model_config = SettingsConfigDict(
         yaml_file="config.yaml",

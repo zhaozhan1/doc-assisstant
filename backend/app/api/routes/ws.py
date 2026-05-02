@@ -58,3 +58,44 @@ async def task_progress_ws(websocket: WebSocket, task_id: str) -> None:
     except WebSocketDisconnect:
         send_task.cancel()
         recv_task.cancel()
+
+
+@router.websocket("/ws/pptx-tasks/{task_id}")
+async def pptx_task_ws(websocket: WebSocket, task_id: str) -> None:
+    await websocket.accept()
+    pptx_task_manager = websocket.app.state.pptx_task_manager
+
+    try:
+        pptx_task_manager.get_progress(task_id)
+    except KeyError:
+        await websocket.send_json({"type": "error", "data": {"message": f"任务不存在: {task_id}"}})
+        await websocket.close()
+        return
+
+    try:
+        last_step = -1
+        while True:
+            progress = pptx_task_manager.get_progress(task_id)
+            if progress.step_index != last_step or progress.status.value in ("completed", "failed"):
+                last_step = progress.step_index
+                await websocket.send_json({
+                    "type": progress.status.value,
+                    "data": {
+                        "task_id": progress.task_id,
+                        "status": progress.status.value,
+                        "current_step": progress.current_step,
+                        "step_index": progress.step_index,
+                        "total_steps": progress.total_steps,
+                        "output_path": progress.output_path,
+                        "slide_count": progress.slide_count,
+                        "slides": progress.slides_data,
+                        "source_doc": progress.source_doc,
+                        "duration_ms": progress.duration_ms,
+                        "error": progress.error,
+                    },
+                })
+                if progress.status.value in ("completed", "failed"):
+                    return
+            await asyncio.sleep(0.3)
+    except WebSocketDisconnect:
+        pass
