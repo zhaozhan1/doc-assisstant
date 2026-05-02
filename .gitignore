@@ -47,3 +47,4 @@ htmlcov/
 
 # Config (contains secrets)
 backend/config.yaml
+.superpowers/
