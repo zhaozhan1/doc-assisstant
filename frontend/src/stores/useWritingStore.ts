@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import type {
   GenerationRequest,
+  PptxRequest,
+  PptxResult,
   UnifiedSearchResult,
 } from "../types/api";
 import * as generationApi from "../api/generation";
@@ -16,6 +18,11 @@ interface WritingState {
   error: string | null;
   selectedRefs: string[];
   searchResults: UnifiedSearchResult[];
+  pptxTaskId: string | null;
+  pptxResult: PptxResult | null;
+  pptxError: string | null;
+  isGeneratingPptx: boolean;
+  sessionGeneratedDocs: string[];
 }
 
 interface WritingActions {
@@ -25,10 +32,13 @@ interface WritingActions {
   setSelectedRefs: (refs: string[]) => void;
   setSearchResults: (results: UnifiedSearchResult[]) => void;
   setMode: (mode: WritingMode) => void;
+  startPptxGeneration: (request: PptxRequest) => Promise<void>;
+  resetPptxState: () => void;
+  addSessionDoc: (path: string) => void;
 }
 
 export const useWritingStore = create<WritingState & WritingActions>(
-  (set) => {
+  (set, get) => {
     let abortController: AbortController | null = null;
 
     return {
@@ -39,11 +49,22 @@ export const useWritingStore = create<WritingState & WritingActions>(
       error: null,
       selectedRefs: [],
       searchResults: [],
+      pptxTaskId: null,
+      pptxResult: null,
+      pptxError: null,
+      isGeneratingPptx: false,
+      sessionGeneratedDocs: [],
 
       generate: async (request: GenerationRequest) => {
         set({ isStreaming: true, error: null });
         try {
           const result = await generationApi.generate(request);
+          if (result.output_path) {
+            const { sessionGeneratedDocs: existing } = get();
+            if (!existing.includes(result.output_path)) {
+              set({ sessionGeneratedDocs: [...existing, result.output_path] });
+            }
+          }
           set({
             content: result.content,
             outputPath: result.output_path,
@@ -109,6 +130,47 @@ export const useWritingStore = create<WritingState & WritingActions>(
       setSearchResults: (results: UnifiedSearchResult[]) =>
         set({ searchResults: results }),
       setMode: (mode: WritingMode) => set({ mode }),
+
+      startPptxGeneration: async (request: PptxRequest) => {
+        set({ pptxResult: null, pptxError: null, isGeneratingPptx: true });
+        try {
+          const { task_id } = await generationApi.generatePptx(request);
+          set({ pptxTaskId: task_id });
+
+          const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+          const ws = new WebSocket(
+            `${protocol}//${window.location.host}/ws/pptx-tasks/${task_id}`,
+          );
+          ws.onmessage = (event) => {
+            const msg = JSON.parse(event.data);
+            if (msg.type === "completed") {
+              set({ pptxResult: msg.data, isGeneratingPptx: false });
+              ws.close();
+            } else if (msg.type === "failed") {
+              set({ pptxError: msg.data.error || "生成失败", isGeneratingPptx: false });
+              ws.close();
+            } else {
+              set({ pptxResult: msg.data });
+            }
+          };
+          ws.onerror = () => {
+            set({ pptxError: "WebSocket 连接失败", isGeneratingPptx: false });
+          };
+        } catch (err) {
+          set({
+            pptxError: err instanceof Error ? err.message : "PPT 生成失败",
+            isGeneratingPptx: false,
+          });
+        }
+      },
+
+      resetPptxState: () =>
+        set({ pptxTaskId: null, pptxResult: null, pptxError: null, isGeneratingPptx: false }),
+
+      addSessionDoc: (path: string) =>
+        set((state) => ({
+          sessionGeneratedDocs: [...state.sessionGeneratedDocs, path],
+        })),
     };
   },
 );

@@ -13,6 +13,11 @@ describe("WordToPptMode", () => {
       error: null,
       selectedRefs: [],
       searchResults: [],
+      pptxTaskId: null,
+      pptxResult: null,
+      pptxError: null,
+      isGeneratingPptx: false,
+      sessionGeneratedDocs: [],
     });
   });
 
@@ -23,14 +28,14 @@ describe("WordToPptMode", () => {
     expect(screen.getByText("本次生成")).toBeInTheDocument();
   });
 
-  it("shows upload area in default tab", () => {
+  it("shows KB search in default tab", () => {
     render(<WordToPptMode />);
     expect(
-      screen.getByText(/点击或拖拽 .docx 文件到此处/),
+      screen.getByPlaceholderText("搜索知识库中的文档..."),
     ).toBeInTheDocument();
   });
 
-  it("shows disabled generate button", () => {
+  it("shows disabled generate button when no file selected", () => {
     render(<WordToPptMode />);
     const btn = screen.getByRole("button", { name: /生成 PPT/ });
     expect(btn).toBeDisabled();
@@ -39,18 +44,17 @@ describe("WordToPptMode", () => {
   it("shows placeholder text in right panel", () => {
     render(<WordToPptMode />);
     expect(
-      screen.getByText(/Word 转 PPT 功能将在后续版本提供/),
+      screen.getByText(/选择文档并点击「生成 PPT」后，结果将在此处显示/),
     ).toBeInTheDocument();
   });
 
-  it("switches to knowledge base tab", async () => {
+  it("switches to upload tab and shows drag area", async () => {
     const user = userEvent.setup();
     render(<WordToPptMode />);
 
-    await user.click(screen.getByText("知识库选择"));
-    // Should show KB-related UI (search input)
+    await user.click(screen.getByText("上传文件"));
     expect(
-      screen.getByPlaceholderText("搜索知识库中的文档..."),
+      screen.getByText(/点击或拖拽 .docx 文件到此处/),
     ).toBeInTheDocument();
   });
 

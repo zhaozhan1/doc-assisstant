@@ -3,6 +3,8 @@ from __future__ import annotations
 from fastapi import Request
 
 from app.config import AppConfig
+from app.generation.pptx_generator import PptxGenerator
+from app.generation.pptx_task_manager import PptxTaskManager
 from app.generation.template_manager import TemplateManager
 from app.generation.writer_service import WriterService
 from app.retrieval.file_service import FileService
@@ -37,3 +39,11 @@ def get_template_manager(request: Request) -> TemplateManager:
 
 def get_task_manager(request: Request) -> TaskManager:
     return request.app.state.task_manager
+
+
+def get_pptx_generator(request: Request) -> PptxGenerator:
+    return request.app.state.pptx_generator
+
+
+def get_pptx_task_manager(request: Request) -> PptxTaskManager:
+    return request.app.state.pptx_task_manager

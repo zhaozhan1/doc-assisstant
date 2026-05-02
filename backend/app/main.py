@@ -13,6 +13,8 @@ from app.config import AppConfig, LoggingConfig
 from app.db.vector_store import VectorStore
 from app.generation.docx_formatter import DocxFormatter
 from app.generation.intent_parser import IntentParser
+from app.generation.pptx_generator import PptxGenerator
+from app.generation.pptx_task_manager import PptxTaskManager
 from app.generation.prompt_builder import PromptBuilder
 from app.generation.template_manager import TemplateManager
 from app.generation.writer import Writer
@@ -37,17 +39,19 @@ def setup_logging(config: LoggingConfig) -> None:
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)
 
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(log_level)
-    console_handler.setFormatter(logging.Formatter(log_format))
-    root_logger.addHandler(console_handler)
+    # Avoid re-adding handlers if they already exist (e.g. during hot reload)
+    if not root_logger.handlers:
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(log_level)
+        console_handler.setFormatter(logging.Formatter(log_format))
+        root_logger.addHandler(console_handler)
 
-    log_path = Path(config.file)
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-    file_handler = RotatingFileHandler(config.file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8")
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(logging.Formatter(log_format))
-    root_logger.addHandler(file_handler)
+        log_path = Path(config.file)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        file_handler = RotatingFileHandler(config.file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8")
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(logging.Formatter(log_format))
+        root_logger.addHandler(file_handler)
 
 
 def create_app() -> FastAPI:
@@ -98,6 +102,11 @@ def create_app() -> FastAPI:
 
         app.state.writer_service = writer_service
         app.state.template_mgr = template_mgr
+
+        pptx_generator = PptxGenerator(llm=llm, output_dir=Path(config.generation.save_path))
+        pptx_task_manager = PptxTaskManager()
+        app.state.pptx_generator = pptx_generator
+        app.state.pptx_task_manager = pptx_task_manager
 
         yield
 
