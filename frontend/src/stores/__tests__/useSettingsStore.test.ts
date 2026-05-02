@@ -78,7 +78,7 @@ describe("useSettingsStore", () => {
       expect(state.loading).toBe(false);
     });
 
-    it("handles error", async () => {
+    it("handles partial failure gracefully", async () => {
       vi.spyOn(settingsApi, "getKBConfig").mockRejectedValue(
         new Error("config fail"),
       );
@@ -92,7 +92,14 @@ describe("useSettingsStore", () => {
 
       await useSettingsStore.getState().fetchAllConfigs();
 
-      expect(useSettingsStore.getState().error).toBe("config fail");
+      const state = useSettingsStore.getState();
+      // Failed fetch yields null, successful fetches still populate
+      expect(state.kb).toBeNull();
+      expect(state.llm).toEqual(mockLLM);
+      expect(state.generation).toEqual(mockGeneration);
+      expect(state.onlineSearch).toEqual(mockOnlineSearch);
+      expect(state.loading).toBe(false);
+      expect(state.error).toBeNull();
     });
   });
 

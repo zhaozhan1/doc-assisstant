@@ -11,6 +11,7 @@ interface TaskState {
 interface TaskActions {
   startUpload: (files: File[]) => Promise<void>;
   setProgress: (progress: TaskProgress | null) => void;
+  close: () => void;
   reset: () => void;
 }
 
@@ -18,6 +19,9 @@ interface WSMessage {
   type: "progress" | "completed" | "error";
   data: TaskProgress | Record<string, unknown>;
 }
+
+/** Module-level ref holding the active WebSocket so it can be cleaned up. */
+let activeWs: WebSocket | null = null;
 
 export const useTaskStore = create<TaskState & TaskActions>((set) => ({
   taskId: null,
@@ -31,11 +35,18 @@ export const useTaskStore = create<TaskState & TaskActions>((set) => ({
       const taskId = result.task_id;
       set({ taskId, uploading: false });
 
+      // Close any previous connection
+      if (activeWs) {
+        activeWs.close();
+        activeWs = null;
+      }
+
       // Connect WebSocket to track progress
       const protocol =
         window.location.protocol === "https:" ? "wss:" : "ws:";
       const wsUrl = `${protocol}//${window.location.host}/ws/tasks/${taskId}`;
       const ws = new WebSocket(wsUrl);
+      activeWs = ws;
 
       ws.addEventListener("message", (event: MessageEvent) => {
         try {
@@ -47,8 +58,10 @@ export const useTaskStore = create<TaskState & TaskActions>((set) => ({
               progress: msg.data as TaskProgress,
             });
             ws.close();
+            activeWs = null;
           } else if (msg.type === "error") {
             ws.close();
+            activeWs = null;
           }
         } catch {
           // Ignore malformed messages
@@ -62,5 +75,18 @@ export const useTaskStore = create<TaskState & TaskActions>((set) => ({
 
   setProgress: (progress) => set({ progress }),
 
-  reset: () => set({ taskId: null, progress: null, uploading: false }),
+  close: () => {
+    if (activeWs) {
+      activeWs.close();
+      activeWs = null;
+    }
+  },
+
+  reset: () => {
+    if (activeWs) {
+      activeWs.close();
+      activeWs = null;
+    }
+    set({ taskId: null, progress: null, uploading: false });
+  },
 }));

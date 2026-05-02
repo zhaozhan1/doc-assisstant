@@ -4,6 +4,7 @@ import type {
   UnifiedSearchResult,
 } from "../types/api";
 import * as generationApi from "../api/generation";
+import { parseSSEStream } from "../utils/sse";
 
 export type WritingMode = "onestep" | "stepbystep" | "wordtoppt";
 
@@ -25,12 +26,8 @@ interface WritingActions {
   setMode: (mode: WritingMode) => void;
 }
 
-interface SSEMessage {
-  token: string;
-}
-
 export const useWritingStore = create<WritingState & WritingActions>(
-  (set, get) => {
+  (set) => {
     let abortController: AbortController | null = null;
 
     return {
@@ -80,34 +77,8 @@ export const useWritingStore = create<WritingState & WritingActions>(
             throw new Error("无法读取响应流");
           }
 
-          const decoder = new TextDecoder();
-          let buffer = "";
-
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split("\n");
-            buffer = lines.pop() || "";
-
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                const payload = line.slice(6).trim();
-                if (payload === "[DONE]") {
-                  set({ isStreaming: false });
-                  return;
-                }
-                try {
-                  const parsed = JSON.parse(payload) as SSEMessage;
-                  if (parsed.token) {
-                    set({ content: get().content + parsed.token });
-                  }
-                } catch {
-                  // Skip malformed lines
-                }
-              }
-            }
+          for await (const token of parseSSEStream(reader)) {
+            set((state) => ({ content: state.content + token }));
           }
 
           set({ isStreaming: false });

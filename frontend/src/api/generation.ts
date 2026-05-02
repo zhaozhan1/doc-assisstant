@@ -7,22 +7,3 @@ export const generate = async (
   const { data } = await client.post("/generation/generate", request);
   return data;
 };
-
-export const generateStream = (
-  request: GenerationRequest,
-): EventSource => {
-  const params = new URLSearchParams();
-  params.set("description", request.description);
-  if (request.selected_refs) {
-    params.set("selected_refs", JSON.stringify(request.selected_refs));
-  }
-  if (request.requirements) {
-    params.set("requirements", request.requirements);
-  }
-  if (request.template_id) {
-    params.set("template_id", request.template_id);
-  }
-  return new EventSource(
-    `/api/generation/generate/stream?${params.toString()}`,
-  );
-};

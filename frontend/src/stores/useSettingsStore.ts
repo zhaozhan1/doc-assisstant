@@ -47,10 +47,10 @@ export const useSettingsStore = create<SettingsState & SettingsActions>(
       set({ loading: true, error: null });
       try {
         const [kb, llm, generation, onlineSearch] = await Promise.all([
-          settingsApi.getKBConfig(),
-          settingsApi.getLLMConfig(),
-          settingsApi.getGenerationConfig(),
-          settingsApi.getOnlineSearchConfig(),
+          settingsApi.getKBConfig().catch(() => null),
+          settingsApi.getLLMConfig().catch(() => null),
+          settingsApi.getGenerationConfig().catch(() => null),
+          settingsApi.getOnlineSearchConfig().catch(() => null),
         ]);
         set({ kb, llm, generation, onlineSearch, loading: false });
       } catch (err) {
