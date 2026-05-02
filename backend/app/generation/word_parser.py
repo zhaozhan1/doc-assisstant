@@ -64,6 +64,10 @@ class WordParser:
             WordParseError: If the file is invalid (wrong format, missing,
                 corrupted, or empty).
         """
+        self._open_and_validate(file_path)
+
+    def _open_and_validate(self, file_path: Path) -> Document:
+        """Open and validate a .docx file, returning the Document object."""
         file_path = Path(file_path)
 
         if not file_path.exists():
@@ -83,6 +87,8 @@ class WordParser:
         if not doc.paragraphs:
             raise WordParseError("Document contains no paragraphs", reason="empty")
 
+        return doc
+
     def parse(self, file_path: Path) -> WordStructure:
         """Parse a .docx file and return its structure.
 
@@ -95,10 +101,8 @@ class WordParser:
         Raises:
             WordParseError: If the file is invalid.
         """
+        doc = self._open_and_validate(file_path)
         file_path = Path(file_path)
-        self.validate(file_path)
-
-        doc = Document(str(file_path))
 
         sections: list[Section] = []
         title = ""
@@ -121,9 +125,7 @@ class WordParser:
                 if sections:
                     sections[-1].paragraphs.append(text)
                 else:
-                    # Paragraphs before any heading -> create a level-0 section
-                    if not sections:
-                        sections.append(Section(level=0, heading=""))
+                    sections.append(Section(level=0, heading=""))
                     sections[-1].paragraphs.append(text)
 
         if not title:
