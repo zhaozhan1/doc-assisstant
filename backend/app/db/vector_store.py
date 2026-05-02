@@ -100,3 +100,9 @@ class VectorStore:
         if not results["ids"]:
             return None
         return results["metadatas"][0].get("source_file")
+
+    async def upsert_batch(self, all_chunks: list[Chunk], batch_size: int = 100) -> None:
+        """批量入库，按 batch_size 分批"""
+        for i in range(0, len(all_chunks), batch_size):
+            batch = all_chunks[i : i + batch_size]
+            await self.upsert(batch)

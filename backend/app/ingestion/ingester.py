@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from pathlib import Path
 
@@ -62,3 +63,14 @@ class Ingester:
         except Exception as e:
             logger.exception("处理文件失败: %s", path)
             return FileResult(path=str(path), status="failed", error=str(e))
+
+    async def process_files(self, paths: list[Path], max_concurrent: int = 4) -> list[FileResult]:
+        """并行处理多个文件"""
+        semaphore = asyncio.Semaphore(max_concurrent)
+
+        async def _limited(path: Path) -> FileResult:
+            async with semaphore:
+                return await self.process_file(path)
+
+        results = await asyncio.gather(*[_limited(p) for p in paths])
+        return list(results)
