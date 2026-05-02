@@ -17,6 +17,7 @@ router = APIRouter(prefix="/api/files", tags=["files"])
 
 _file_service_dep = Depends(get_file_service)
 _task_mgr_dep = Depends(get_task_manager)
+_file_required = File(...)
 
 
 @router.get("", response_model=list[IndexedFile])
@@ -74,7 +75,7 @@ async def update_classification(
 
 @router.post("/upload")
 async def upload_files(
-    files: list[UploadFile] = File(...),
+    files: list[UploadFile] = _file_required,
     task_manager: TaskManager = _task_mgr_dep,
 ) -> dict:
     upload_dir = Path(tempfile.mkdtemp(prefix="doc_upload_"))
