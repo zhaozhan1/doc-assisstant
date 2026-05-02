@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from app.config import AppConfig
+from app.config import AppConfig, ServerConfig
 
 
 class TestAppConfig:
@@ -157,3 +157,53 @@ class TestGenerationConfig:
         assert config.generation.save_path == "./output"
         assert config.generation.include_sources is True
         assert config.generation.max_prompt_tokens == 4096
+
+
+class TestServerConfig:
+    def test_default_cors_origins(self) -> None:
+        config = ServerConfig()
+        assert config.cors_origins == ["http://localhost:5173"]
+
+    def test_custom_cors_origins(self) -> None:
+        config = ServerConfig(cors_origins=["https://example.com", "https://app.example.com"])
+        assert config.cors_origins == ["https://example.com", "https://app.example.com"]
+
+    def test_default_host_and_port(self) -> None:
+        config = ServerConfig()
+        assert config.host == "127.0.0.1"
+        assert config.port == 8000
+
+    def test_custom_host_and_port(self) -> None:
+        config = ServerConfig(host="0.0.0.0", port=9000)
+        assert config.host == "0.0.0.0"
+        assert config.port == 9000
+
+    def test_default_workers(self) -> None:
+        config = ServerConfig()
+        assert config.workers == 1
+
+    def test_server_config_in_app_config(self, tmp_path: Path) -> None:
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("{}")
+        config = AppConfig(_yaml_file=str(config_file))
+        assert isinstance(config.server, ServerConfig)
+        assert config.server.cors_origins == ["http://localhost:5173"]
+
+    def test_server_config_from_yaml(self, tmp_path: Path) -> None:
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            """
+server:
+  cors_origins:
+    - https://prod.example.com
+    - https://admin.example.com
+  host: "0.0.0.0"
+  port: 9000
+  workers: 4
+"""
+        )
+        config = AppConfig(_yaml_file=str(config_file))
+        assert config.server.cors_origins == ["https://prod.example.com", "https://admin.example.com"]
+        assert config.server.host == "0.0.0.0"
+        assert config.server.port == 9000
+        assert config.server.workers == 4

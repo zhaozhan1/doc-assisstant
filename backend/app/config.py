@@ -69,6 +69,13 @@ class GenerationConfig(BaseModel):
     word_template_path: str = ""
 
 
+class ServerConfig(BaseModel):
+    cors_origins: list[str] = ["http://localhost:5173"]
+    host: str = "127.0.0.1"
+    port: int = 8000
+    workers: int = 1
+
+
 class AppConfig(BaseSettings):
     knowledge_base: KnowledgeBaseConfig = KnowledgeBaseConfig()
     llm: LLMConfig = LLMConfig()
@@ -76,10 +83,13 @@ class AppConfig(BaseSettings):
     logging: LoggingConfig = LoggingConfig()
     online_search: OnlineSearchConfig = OnlineSearchConfig()
     generation: GenerationConfig = GenerationConfig()
+    server: ServerConfig = ServerConfig()
 
     model_config = SettingsConfigDict(
         yaml_file="config.yaml",
         yaml_file_encoding="utf-8",
+        env_file=".env",
+        env_file_encoding="utf-8",
         extra="ignore",
     )
 
