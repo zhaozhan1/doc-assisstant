@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
+import structlog
 from fastapi import FastAPI
 
 from app.api.middleware import register_exception_handlers
@@ -36,20 +37,42 @@ def setup_logging(config: LoggingConfig) -> None:
     log_format = "%(asctime)s [%(levelname)s] %(name)s — %(message)s"
     log_level = getattr(logging, config.level.upper(), logging.INFO)
 
+    # Configure structlog to bridge into stdlib logging
+    structlog.configure(
+        processors=[
+            structlog.contextvars.merge_contextvars,
+            structlog.stdlib.filter_by_level,
+            structlog.stdlib.add_logger_name,
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.UnicodeDecoder(),
+            structlog.stdlib.render_to_log_kwargs,
+        ],
+        wrapper_class=structlog.stdlib.BoundLogger,
+        context_class=dict,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        cache_logger_on_first_use=True,
+    )
+
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)
 
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(log_level)
-    console_handler.setFormatter(logging.Formatter(log_format))
-    root_logger.addHandler(console_handler)
+    # Avoid re-adding handlers if they already exist (e.g. during hot reload)
+    if not root_logger.handlers:
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(log_level)
+        console_handler.setFormatter(logging.Formatter(log_format))
+        root_logger.addHandler(console_handler)
 
-    log_path = Path(config.file)
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-    file_handler = RotatingFileHandler(config.file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8")
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(logging.Formatter(log_format))
-    root_logger.addHandler(file_handler)
+        log_path = Path(config.file)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        file_handler = RotatingFileHandler(config.file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8")
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(logging.Formatter(log_format))
+        root_logger.addHandler(file_handler)
 
 
 def create_app() -> FastAPI:
