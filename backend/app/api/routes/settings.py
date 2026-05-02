@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import APIRouter, Depends
 
-from app.api.deps import get_settings_service
-from app.config import OnlineSearchConfig
+from app.api.deps import get_config, get_settings_service
+from app.config import AppConfig, OnlineSearchConfig
 from app.models.search import (
     ConnectionTestResult,
     GenerationSettingsUpdate,
@@ -16,6 +18,7 @@ from app.settings_service import SettingsService
 router = APIRouter(prefix="/api/settings", tags=["settings"])
 
 _settings_dep = Depends(get_settings_service)
+_config_dep = Depends(get_config)
 
 
 def _mask_config(config: OnlineSearchConfig) -> dict:
@@ -100,10 +103,20 @@ async def update_generation_config(
 
 
 @router.get("/files/browse")
-async def browse_directory(path: str = ".") -> dict:
-    from pathlib import Path
-
+async def browse_directory(
+    path: str = ".",
+    config: AppConfig = _config_dep,
+) -> dict:
     target = Path(path).resolve()
+    # Restrict browsing to user home and configured paths
+    allowed_prefixes = [
+        Path.home().resolve(),
+        Path(config.knowledge_base.source_folder).resolve(),
+        Path(config.generation.save_path).resolve(),
+        Path(".").resolve(),
+    ]
+    if not any(str(target).startswith(str(prefix)) for prefix in allowed_prefixes):
+        return {"path": str(target), "children": []}
     if not target.is_dir():
         return {"path": str(target), "children": []}
     children = []

@@ -26,12 +26,10 @@ class SettingsService:
         return self._config.online_search
 
     def update_online_search_config(self, update: OnlineSearchConfigUpdate) -> OnlineSearchConfig:
-        current = self._config.online_search
         update_data = update.model_dump(exclude_none=True)
-        for key, value in update_data.items():
-            setattr(current, key, value)
+        self._config.online_search = self._config.online_search.model_copy(update=update_data)
         self._write_config()
-        return current
+        return self._config.online_search
 
     async def test_connection(self, config: OnlineSearchConfigUpdate) -> ConnectionTestResult:
         return ConnectionTestResult(
@@ -62,11 +60,10 @@ class SettingsService:
         return self._config.knowledge_base
 
     def update_kb_config(self, update: KBSettingsUpdate) -> KnowledgeBaseConfig:
-        current = self._config.knowledge_base
-        for key, value in update.model_dump(exclude_none=True).items():
-            setattr(current, key, value)
+        update_data = update.model_dump(exclude_none=True)
+        self._config.knowledge_base = self._config.knowledge_base.model_copy(update=update_data)
         self._write_config()
-        return current
+        return self._config.knowledge_base
 
     # ── LLM ─────────────────────────────────────────────────────
 
@@ -109,8 +106,8 @@ class SettingsService:
                     llm.providers[provider_name] = OllamaConfig()
                 elif provider_name == "claude":
                     llm.providers[provider_name] = ClaudeConfig()
-            for key, value in fields.items():
-                setattr(llm.providers[provider_name], key, value)
+            # Use model_copy to re-run Pydantic validation
+            llm.providers[provider_name] = llm.providers[provider_name].model_copy(update=fields)
 
         self._write_config()
         return self.get_llm_config()
@@ -121,8 +118,7 @@ class SettingsService:
         return self._config.generation
 
     def update_generation_config(self, update: GenerationSettingsUpdate) -> GenerationConfig:
-        current = self._config.generation
-        for key, value in update.model_dump(exclude_none=True).items():
-            setattr(current, key, value)
+        update_data = update.model_dump(exclude_none=True)
+        self._config.generation = self._config.generation.model_copy(update=update_data)
         self._write_config()
-        return current
+        return self._config.generation

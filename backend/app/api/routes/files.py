@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 import tempfile
 from datetime import date
 from pathlib import Path
@@ -8,7 +9,8 @@ from typing import Literal
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
-from app.api.deps import get_file_service, get_task_manager
+from app.api.deps import get_config, get_file_service, get_task_manager
+from app.config import AppConfig
 from app.models.search import ClassificationUpdate, FileListRequest, IndexedFile
 from app.retrieval.file_service import FileService
 from app.task_manager import TaskManager
@@ -17,6 +19,7 @@ router = APIRouter(prefix="/api/files", tags=["files"])
 
 _file_service_dep = Depends(get_file_service)
 _task_mgr_dep = Depends(get_task_manager)
+_config_dep = Depends(get_config)
 _file_required = File(...)
 
 
@@ -81,7 +84,10 @@ async def upload_files(
     upload_dir = Path(tempfile.mkdtemp(prefix="doc_upload_"))
     paths: list[Path] = []
     for f in files:
-        dest = upload_dir / f.filename
+        safe_name = Path(f.filename).name
+        if not safe_name:
+            continue
+        dest = upload_dir / safe_name
         content = await f.read()
         if not content:
             continue
@@ -89,17 +95,28 @@ async def upload_files(
         paths.append(dest)
 
     if not paths:
+        shutil.rmtree(upload_dir, ignore_errors=True)
         raise HTTPException(status_code=422, detail="未提供有效文件")
 
     task_id = await task_manager.start_import(paths)
+    # Ingester copies files, so temp dir can be cleaned up after task starts
+    shutil.rmtree(upload_dir, ignore_errors=True)
     return {"task_id": task_id}
 
 
 @router.get("/download/{file_path:path}")
-async def download_file(file_path: str) -> FileResponse:
+async def download_file(
+    file_path: str,
+    config: AppConfig = _config_dep,
+) -> FileResponse:
     if ".." in Path(file_path).parts:
         raise HTTPException(status_code=400, detail="非法路径")
     path = Path(file_path).resolve()
+    allowed_root = Path(config.generation.save_path).resolve()
+    try:
+        path.relative_to(allowed_root)
+    except ValueError as exc:
+        raise HTTPException(status_code=403, detail="无权访问该路径") from exc
     if not path.exists() or not path.is_file():
         raise HTTPException(status_code=404, detail=f"文件不存在: {file_path}")
     return FileResponse(path, filename=path.name)

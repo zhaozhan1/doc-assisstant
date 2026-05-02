@@ -106,9 +106,14 @@ def create_app() -> FastAPI:
 
     from starlette.middleware.cors import CORSMiddleware
 
+    # TODO: 生产环境应从配置读取允许的源
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173"],
+        allow_origins=[
+            "http://localhost:5173",  # Vite dev server
+            "http://localhost:3000",  # Alternative dev port
+            "http://127.0.0.1:5173",  # Alternative host
+        ],
         allow_methods=["*"],
         allow_headers=["*"],
     )

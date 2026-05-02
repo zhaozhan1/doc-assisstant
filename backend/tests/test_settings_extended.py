@@ -25,6 +25,7 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     config.llm.providers["claude"] = ClaudeConfig(api_key="secret-key")
     settings_service = SettingsService(config, config_path=config_file)
 
+    app.state.config = config
     app.state.retriever = AsyncMock()
     app.state.file_service = AsyncMock()
     app.state.settings_service = settings_service
