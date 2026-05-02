@@ -7,7 +7,8 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
-from app.api.routes import files, generation, health, retrieval, settings, templates
+from app.api.middleware import register_exception_handlers
+from app.api.routes import files, generation, health, retrieval, settings, stats, templates, ws
 from app.config import AppConfig, LoggingConfig
 from app.db.vector_store import VectorStore
 from app.generation.docx_formatter import DocxFormatter
@@ -101,12 +102,29 @@ def create_app() -> FastAPI:
         yield
 
     app = FastAPI(title="公文助手", version="0.1.0", lifespan=_lifespan)
+    register_exception_handlers(app)
+
+    from starlette.middleware.cors import CORSMiddleware
+
+    # TODO: 生产环境应从配置读取允许的源
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost:5173",  # Vite dev server
+            "http://localhost:3000",  # Alternative dev port
+            "http://127.0.0.1:5173",  # Alternative host
+        ],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     app.include_router(health.router)
     app.include_router(retrieval.router)
     app.include_router(files.router)
     app.include_router(settings.router)
     app.include_router(generation.router)
     app.include_router(templates.router)
+    app.include_router(stats.router)
+    app.include_router(ws.router)
 
     return app
 

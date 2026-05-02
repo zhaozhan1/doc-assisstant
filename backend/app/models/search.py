@@ -74,3 +74,27 @@ class OnlineSearchConfigUpdate(BaseModel):
 class ConnectionTestResult(BaseModel):
     success: bool
     message: str
+
+
+class KBSettingsUpdate(BaseModel):
+    source_folder: str | None = None
+    db_path: str | None = None
+    chunk_size: int | None = None
+    chunk_overlap: int | None = None
+
+
+class LLMSettingsUpdate(BaseModel):
+    default_provider: str | None = None
+    ollama_base_url: str | None = None
+    ollama_chat_model: str | None = None
+    ollama_embed_model: str | None = None
+    claude_base_url: str | None = None
+    claude_api_key: str | None = None
+    claude_chat_model: str | None = None
+
+
+class GenerationSettingsUpdate(BaseModel):
+    output_format: str | None = None
+    save_path: str | None = None
+    include_sources: bool | None = None
+    word_template_path: str | None = None
