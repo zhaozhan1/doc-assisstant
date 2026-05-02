@@ -118,6 +118,7 @@ def create_app() -> FastAPI:
         query_rewriter = None
         if config.knowledge_base.enable_query_rewrite:
             from app.retrieval.query_rewriter import QueryRewriter
+
             query_rewriter = QueryRewriter(llm)
         retriever = Retriever(local_search, online_search, fusion, query_rewriter=query_rewriter)
         file_service = FileService(vector_store, ingester)

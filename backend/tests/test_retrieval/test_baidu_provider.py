@@ -2,10 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
-
 from app.config import OnlineSearchConfig
-from app.models.search import OnlineSearchItem
 from app.retrieval.online_search import OnlineSearchFactory
 
 

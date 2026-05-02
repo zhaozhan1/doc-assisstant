@@ -38,7 +38,11 @@ class TestStructlogSetup:
 
         root_logger = logging.getLogger()
         file_handlers = [h for h in root_logger.handlers if isinstance(h, logging.FileHandler)]
-        stream_handlers = [h for h in root_logger.handlers if isinstance(h, logging.StreamHandler) and not isinstance(h, logging.FileHandler)]
+        stream_handlers = [
+            h
+            for h in root_logger.handlers
+            if isinstance(h, logging.StreamHandler) and not isinstance(h, logging.FileHandler)
+        ]
 
         assert len(file_handlers) >= 1
         assert len(stream_handlers) >= 1

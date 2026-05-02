@@ -3,8 +3,6 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
-import pytest
-
 from app.ingestion.chunker import Chunker
 from app.models.document import DocumentMetadata, ExtractedDoc
 
@@ -71,9 +69,10 @@ class TestSmartSplit:
 class TestSmartSplitIntegration:
     def test_ingester_uses_smart_split_when_configured(self) -> None:
         """Verify Ingester calls smart_split when config flag is set."""
+        from unittest.mock import MagicMock, patch
+
         from app.config import AppConfig, KnowledgeBaseConfig, LLMConfig
         from app.ingestion.ingester import Ingester
-        from unittest.mock import MagicMock, patch
 
         config = AppConfig(
             knowledge_base=KnowledgeBaseConfig(smart_chunking=True, chunk_size=500),
@@ -82,8 +81,9 @@ class TestSmartSplitIntegration:
         mock_llm = MagicMock()
         mock_vs = MagicMock()
 
-        with patch.object(Chunker, "smart_split", return_value=[]) as mock_smart:
-            with patch.object(Chunker, "split", return_value=[]) as mock_regular:
-                ingester = Ingester(config, mock_llm, mock_vs)
-                # Verify the ingester was configured with smart_chunking
-                assert ingester._use_smart_chunking is True
+        with (
+            patch.object(Chunker, "smart_split", return_value=[]),
+            patch.object(Chunker, "split", return_value=[]),
+        ):
+            ingester = Ingester(config, mock_llm, mock_vs)
+            assert ingester._use_smart_chunking is True

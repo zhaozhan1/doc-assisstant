@@ -50,7 +50,9 @@ class Ingester:
                 if existing:
                     continue
 
-                chunks = self.chunker.smart_split(doc, meta) if self._use_smart_chunking else self.chunker.split(doc, meta)
+                chunks = (
+                    self.chunker.smart_split(doc, meta) if self._use_smart_chunking else self.chunker.split(doc, meta)
+                )
                 for c in chunks:
                     c.metadata["file_md5"] = meta.file_md5
                     c.metadata["import_time"] = meta.import_time.isoformat()

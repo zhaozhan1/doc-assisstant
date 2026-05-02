@@ -72,12 +72,11 @@ class TestQueryRewriter:
 class TestQueryRewriterIntegration:
     async def test_retriever_calls_rewriter_when_enabled(self) -> None:
         """Verify Retriever uses QueryRewriter when provided."""
-        from app.config import AppConfig, KnowledgeBaseConfig, LLMConfig, OnlineSearchConfig
+        from app.models.search import SearchRequest
         from app.retrieval.fusion import Fusion
         from app.retrieval.local_search import LocalSearch
         from app.retrieval.online_search import OnlineSearchService
         from app.retrieval.retriever import Retriever
-        from app.models.search import SearchRequest
 
         mock_llm = AsyncMock(spec=BaseLLMProvider)
         mock_llm.chat.return_value = "改写后的查询"
@@ -98,11 +97,11 @@ class TestQueryRewriterIntegration:
 
     async def test_retriever_skips_rewriter_when_none(self) -> None:
         """Verify Retriever works without QueryRewriter (backward compatible)."""
+        from app.models.search import SearchRequest
         from app.retrieval.fusion import Fusion
         from app.retrieval.local_search import LocalSearch
         from app.retrieval.online_search import OnlineSearchService
         from app.retrieval.retriever import Retriever
-        from app.models.search import SearchRequest
 
         mock_local = AsyncMock(spec=LocalSearch)
         mock_local.search.return_value = []
