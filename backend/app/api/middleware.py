@@ -7,13 +7,6 @@ from fastapi.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 
-ERROR_CODE_MAP = {
-    400: "BAD_REQUEST",
-    404: "NOT_FOUND",
-    409: "CONFLICT",
-    422: "VALIDATION_ERROR",
-}
-
 
 class AppError(Exception):
     """Application-level business error with structured code/message format."""
@@ -38,14 +31,12 @@ async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
 
 
 async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
-    error_code = ERROR_CODE_MAP.get(exc.status_code, "UNKNOWN")
+    detail = str(exc.detail)
     return JSONResponse(
         status_code=exc.status_code,
         content={
-            "error": error_code,
-            "code": error_code,
-            "message": str(exc.detail),
-            "detail": str(exc.detail),
+            "error": detail,
+            "detail": detail,
         },
     )
 
@@ -56,8 +47,6 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
         status_code=500,
         content={
             "error": "INTERNAL_ERROR",
-            "code": "INTERNAL_ERROR",
-            "message": "服务器内部错误",
             "detail": "服务器内部错误",
         },
     )

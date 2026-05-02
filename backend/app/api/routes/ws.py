@@ -12,9 +12,25 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["websocket"])
 
+_ALLOWED_ORIGINS = frozenset(
+    {
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+    }
+)
+
+
+def _validate_origin(websocket: WebSocket) -> bool:
+    origin = websocket.headers.get("origin", "")
+    return origin in _ALLOWED_ORIGINS or not origin
+
 
 @router.websocket("/ws/tasks/{task_id}")
 async def task_progress_ws(websocket: WebSocket, task_id: str) -> None:
+    if not _validate_origin(websocket):
+        await websocket.close(code=4001, reason="Invalid origin")
+        return
     await websocket.accept()
     task_manager: TaskManager = websocket.app.state.task_manager
 
@@ -62,6 +78,9 @@ async def task_progress_ws(websocket: WebSocket, task_id: str) -> None:
 
 @router.websocket("/ws/pptx-tasks/{task_id}")
 async def pptx_task_ws(websocket: WebSocket, task_id: str) -> None:
+    if not _validate_origin(websocket):
+        await websocket.close(code=4001, reason="Invalid origin")
+        return
     await websocket.accept()
     pptx_task_manager = websocket.app.state.pptx_task_manager
 
@@ -78,22 +97,29 @@ async def pptx_task_ws(websocket: WebSocket, task_id: str) -> None:
             progress = pptx_task_manager.get_progress(task_id)
             if progress.step_index != last_step or progress.status.value in ("completed", "failed"):
                 last_step = progress.step_index
-                await websocket.send_json({
-                    "type": progress.status.value,
-                    "data": {
-                        "task_id": progress.task_id,
-                        "status": progress.status.value,
-                        "current_step": progress.current_step,
-                        "step_index": progress.step_index,
-                        "total_steps": progress.total_steps,
-                        "output_path": progress.output_path,
-                        "slide_count": progress.slide_count,
-                        "slides": progress.slides_data,
-                        "source_doc": progress.source_doc,
-                        "duration_ms": progress.duration_ms,
-                        "error": progress.error,
-                    },
-                })
+                data = {
+                    "task_id": progress.task_id,
+                    "status": progress.status.value,
+                    "current_step": progress.current_step,
+                    "step_index": progress.step_index,
+                    "total_steps": progress.total_steps,
+                    "slide_count": progress.slide_count,
+                    "slides": progress.slides_data,
+                    "source_doc": progress.source_doc,
+                    "duration_ms": progress.duration_ms,
+                    "error": progress.error,
+                }
+                # Convert server output_path to download URL for client
+                if progress.output_path:
+                    filename = (
+                        progress.output_path.rsplit("/", 1)[-1] if "/" in progress.output_path else progress.output_path
+                    )
+                    data["output_path"] = filename
+                    data["download_url"] = f"/api/files/download/{progress.output_path}"
+                else:
+                    data["output_path"] = None
+                    data["download_url"] = None
+                await websocket.send_json({"type": progress.status.value, "data": data})
                 if progress.status.value in ("completed", "failed"):
                     return
             await asyncio.sleep(0.3)

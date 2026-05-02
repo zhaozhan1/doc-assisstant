@@ -38,7 +38,7 @@ interface WritingActions {
 }
 
 export const useWritingStore = create<WritingState & WritingActions>(
-  (set) => {
+  (set, get) => {
     let abortController: AbortController | null = null;
 
     return {
@@ -59,6 +59,12 @@ export const useWritingStore = create<WritingState & WritingActions>(
         set({ isStreaming: true, error: null });
         try {
           const result = await generationApi.generate(request);
+          if (result.output_path) {
+            const { sessionGeneratedDocs: existing } = get();
+            if (!existing.includes(result.output_path)) {
+              set({ sessionGeneratedDocs: [...existing, result.output_path] });
+            }
+          }
           set({
             content: result.content,
             outputPath: result.output_path,

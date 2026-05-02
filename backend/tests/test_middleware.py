@@ -36,7 +36,7 @@ def test_http_exception_returns_standard_format(client):
     resp = client.get("/raise-http")
     assert resp.status_code == 404
     body = resp.json()
-    assert body["error"] == "NOT_FOUND"
+    assert body["error"] == "资源不存在"
     assert body["detail"] == "资源不存在"
 
 

@@ -84,15 +84,6 @@ class Chunker:
     def _hard_split(self, text: str) -> list[str]:
         return [text[i : i + self._chunk_size] for i in range(0, len(text), self._chunk_size)]
 
-    def smart_split(self, doc: ExtractedDoc, meta: DocumentMetadata) -> list[Chunk]:
-        """按段落+标题自然分块，增大 chunk_size 上限"""
-        old_size = self._chunk_size
-        self._chunk_size = min(int(old_size * 1.6), 800)
-        try:
-            return self.split(doc, meta)
-        finally:
-            self._chunk_size = old_size
-
     def _take_overlap(self, text: str) -> str:
         if not text or self._chunk_overlap <= 0:
             return ""

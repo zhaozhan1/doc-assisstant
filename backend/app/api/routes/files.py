@@ -76,6 +76,20 @@ async def update_classification(
     return {"status": "updated"}
 
 
+_MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
+
+# .docx / .doc files are ZIP-based: magic bytes are PK\x03\x04
+_ZIP_MAGIC = b"PK\x03\x04"
+
+
+def _validate_file_type(filename: str, content: bytes) -> str | None:
+    """Return an error message if file type is invalid, or None if OK."""
+    ext = Path(filename).suffix.lower()
+    if ext in (".docx", ".doc") and content[:4] != _ZIP_MAGIC:
+        return f"文件格式不匹配: {filename} 不是有效的 Word 文档"
+    return None
+
+
 @router.post("/upload")
 async def upload_files(
     files: list[UploadFile] = _file_required,
@@ -91,6 +105,13 @@ async def upload_files(
         content = await f.read()
         if not content:
             continue
+        if len(content) > _MAX_UPLOAD_SIZE:
+            shutil.rmtree(upload_dir, ignore_errors=True)
+            raise HTTPException(status_code=413, detail=f"文件过大: {safe_name}（上限 50MB）")
+        type_error = _validate_file_type(safe_name, content)
+        if type_error:
+            shutil.rmtree(upload_dir, ignore_errors=True)
+            raise HTTPException(status_code=422, detail=type_error)
         dest.write_bytes(content)
         paths.append(dest)
 
@@ -111,7 +132,13 @@ async def download_file(
 ) -> FileResponse:
     if ".." in Path(file_path).parts:
         raise HTTPException(status_code=400, detail="非法路径")
-    path = Path(file_path).resolve()
+    p = Path(file_path)
+    for part in p.parents:
+        if part.exists() and part.is_symlink():
+            raise HTTPException(status_code=403, detail="非法路径")
+    if p.exists() and p.is_symlink():
+        raise HTTPException(status_code=403, detail="非法路径")
+    path = p.resolve()
     allowed_root = Path(config.generation.save_path).resolve()
     try:
         path.relative_to(allowed_root)

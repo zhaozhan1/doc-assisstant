@@ -13,6 +13,9 @@ from docx import Document
 
 logger = logging.getLogger(__name__)
 
+# Safety limits
+_MAX_PARAGRAPHS = 5000
+
 # Mapping from python-docx style names to heading levels
 _HEADING_STYLES: dict[str, int] = {
     "Heading 1": 1,
@@ -109,6 +112,10 @@ class WordParser:
         total_paragraphs = 0
 
         for para in doc.paragraphs:
+            if total_paragraphs >= _MAX_PARAGRAPHS:
+                logger.warning("文档段落过多，已截断至 %d 段", _MAX_PARAGRAPHS)
+                break
+
             text = para.text or ""
             style_name = para.style.name if para.style else ""
 
