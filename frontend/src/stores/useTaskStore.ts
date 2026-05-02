@@ -77,6 +77,9 @@ export const useTaskStore = create<TaskState & TaskActions>((set) => ({
 
   close: () => {
     if (activeWs) {
+      if (activeWs.readyState === WebSocket.OPEN) {
+        activeWs.send(JSON.stringify({ type: "cancel" }));
+      }
       activeWs.close();
       activeWs = null;
     }

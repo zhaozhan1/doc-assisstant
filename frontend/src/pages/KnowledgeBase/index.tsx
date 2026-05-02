@@ -37,8 +37,19 @@ const SORT_OPTIONS: { label: string; value: string }[] = [
   { label: "分块数 ↓", value: "chunk_count_desc" },
 ];
 
+const SORT_MAP: Record<
+  string,
+  { sort_by: FileListParams["sort_by"]; sort_order: "asc" | "desc" }
+> = {
+  doc_date_desc: { sort_by: "doc_date", sort_order: "desc" },
+  doc_date_asc: { sort_by: "doc_date", sort_order: "asc" },
+  file_name_asc: { sort_by: "file_name", sort_order: "asc" },
+  file_name_desc: { sort_by: "file_name", sort_order: "desc" },
+  chunk_count_desc: { sort_by: "chunk_count", sort_order: "desc" },
+};
+
 export default function KnowledgeBase() {
-  const { files, stats, loading, fetchFiles, fetchStats, deleteFile } =
+  const { files, stats, loading, error, fetchFiles, fetchStats, deleteFile } =
     useFileStore();
   const { taskId, progress, startUpload, reset } = useTaskStore();
 
@@ -56,13 +67,10 @@ export default function KnowledgeBase() {
       params.date_from = dateRange[0];
       params.date_to = dateRange[1];
     }
-    // Parse sortValue: "doc_date_desc" -> sort_by=doc_date, sort_order=desc
-    const lastUnderscore = sortValue.lastIndexOf("_");
-    const fieldPart = sortValue.substring(0, lastUnderscore);
-    const orderPart = sortValue.substring(lastUnderscore + 1);
-    params.sort_by = fieldPart as FileListParams["sort_by"];
-    if (orderPart === "asc" || orderPart === "desc") {
-      params.sort_order = orderPart;
+    const sort = SORT_MAP[sortValue];
+    if (sort) {
+      params.sort_by = sort.sort_by;
+      params.sort_order = sort.sort_order;
     }
     return params;
   }, [typeFilter, dateRange, sortValue]);
@@ -76,6 +84,11 @@ export default function KnowledgeBase() {
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
+
+  // Show store errors
+  useEffect(() => {
+    if (error) message.error(error);
+  }, [error]);
 
   // Handle upload
   const handleUpload = async (uploadedFiles: File[]) => {
@@ -246,7 +259,7 @@ export default function KnowledgeBase() {
             .filter((f): f is NonNullable<typeof f> => f != null);
           if (fileList.length > 0) handleUpload(fileList as File[]);
         }}
-        style={{ marginBottom: 24 }}
+        style={{ marginBottom: 8 }}
       >
         <p className="ant-upload-drag-icon">
           <InboxOutlined />
@@ -255,6 +268,20 @@ export default function KnowledgeBase() {
           拖拽文件到此处，或点击选择文件
         </p>
       </Upload.Dragger>
+      <Upload
+        directory
+        showUploadList={false}
+        beforeUpload={() => false}
+        onChange={(info) => {
+          const fileList = info.fileList
+            .map((f) => f.originFileObj)
+            .filter((f): f is NonNullable<typeof f> => f != null);
+          if (fileList.length > 0) handleUpload(fileList as File[]);
+        }}
+        style={{ marginBottom: 24, display: "inline-block" }}
+      >
+        <Button style={{ width: "100%" }}>选择文件夹</Button>
+      </Upload>
 
       {/* Import Progress / Result */}
       {taskId && progress && (
@@ -265,6 +292,9 @@ export default function KnowledgeBase() {
             reset();
           }}
           onClose={handleCloseImport}
+          onReindex={() =>
+            message.info("请稍后在文件列表中重新索引该文件")
+          }
         />
       )}
 

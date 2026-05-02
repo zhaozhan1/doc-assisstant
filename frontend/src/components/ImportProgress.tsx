@@ -1,13 +1,18 @@
 import { useState } from "react";
 import { Progress, Button, Card, Table, Collapse, Space, Statistic } from "antd";
 import type { StatisticProps } from "antd";
-import { CheckCircleFilled, CloseCircleFilled } from "@ant-design/icons";
+import {
+  CheckCircleFilled,
+  CloseCircleFilled,
+  ExclamationCircleFilled,
+} from "@ant-design/icons";
 import type { TaskProgress } from "../types/api";
 
 interface ImportProgressProps {
   progress: TaskProgress;
   onCancel: () => void;
   onClose: () => void;
+  onReindex?: (path: string) => void;
 }
 
 const successStyle: StatisticProps["styles"] = {
@@ -24,6 +29,7 @@ export function ImportProgress({
   progress,
   onCancel,
   onClose,
+  onReindex,
 }: ImportProgressProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -157,8 +163,12 @@ export function ImportProgress({
                       {
                         title: "操作",
                         key: "action",
-                        render: () => (
-                          <Button type="link" size="small">
+                        render: (_: unknown, record: { path: string }) => (
+                          <Button
+                            type="link"
+                            size="small"
+                            onClick={() => onReindex?.(record.path)}
+                          >
                             重新索引
                           </Button>
                         ),
@@ -170,6 +180,64 @@ export function ImportProgress({
             ]}
           />
         )}
+      </Card>
+    );
+  }
+
+  if (progress.status === "failed") {
+    return (
+      <Card
+        style={{
+          marginBottom: 16,
+          borderLeft: "4px solid #ff4d4f",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <CloseCircleFilled style={{ color: "#ff4d4f", marginRight: 8 }} />
+            <strong>导入失败</strong>
+          </div>
+          <Button size="small" onClick={onClose}>
+            关闭
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
+  if (progress.status === "cancelled") {
+    return (
+      <Card
+        style={{
+          marginBottom: 16,
+          borderLeft: "4px solid #faad14",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <ExclamationCircleFilled
+              style={{ color: "#faad14", marginRight: 8 }}
+            />
+            <strong>
+              导入已取消 — 已处理 {progress.processed}/{progress.total} 个文件
+            </strong>
+          </div>
+          <Button size="small" onClick={onClose}>
+            关闭
+          </Button>
+        </div>
       </Card>
     );
   }
