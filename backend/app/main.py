@@ -103,6 +103,15 @@ def create_app() -> FastAPI:
 
     app = FastAPI(title="公文助手", version="0.1.0", lifespan=_lifespan)
     register_exception_handlers(app)
+
+    from starlette.middleware.cors import CORSMiddleware
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:5173"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     app.include_router(health.router)
     app.include_router(retrieval.router)
     app.include_router(files.router)
