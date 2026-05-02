@@ -162,3 +162,28 @@ export interface BrowseResult {
   path: string;
   children: { name: string; path: string; is_dir: boolean }[];
 }
+
+export interface PptxRequest {
+  source_type: "upload" | "kb" | "session";
+  file_path?: string;
+  template_path?: string;
+}
+
+export interface SlideContent {
+  slide_type: "cover" | "toc" | "chapter" | "conclusion";
+  title: string;
+  bullets: string[];
+}
+
+export interface PptxResult {
+  status: string;
+  current_step: string;
+  step_index: number;
+  total_steps: number;
+  output_path: string | null;
+  slide_count: number;
+  slides: SlideContent[];
+  source_doc: string;
+  duration_ms: number;
+  error: string | null;
+}
