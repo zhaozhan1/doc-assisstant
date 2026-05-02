@@ -8,7 +8,7 @@ from pathlib import Path
 from fastapi import FastAPI
 
 from app.api.middleware import register_exception_handlers
-from app.api.routes import files, generation, health, retrieval, settings, templates
+from app.api.routes import files, generation, health, retrieval, settings, stats, templates, ws
 from app.config import AppConfig, LoggingConfig
 from app.db.vector_store import VectorStore
 from app.generation.docx_formatter import DocxFormatter
@@ -109,6 +109,8 @@ def create_app() -> FastAPI:
     app.include_router(settings.router)
     app.include_router(generation.router)
     app.include_router(templates.router)
+    app.include_router(stats.router)
+    app.include_router(ws.router)
 
     return app
 
