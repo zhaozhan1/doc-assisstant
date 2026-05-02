@@ -64,6 +64,7 @@ class GenerationConfig(BaseModel):
     save_path: str = "./output"
     include_sources: bool = True
     max_prompt_tokens: int = 4096
+    word_template_path: str = ""
 
 
 class AppConfig(BaseSettings):
