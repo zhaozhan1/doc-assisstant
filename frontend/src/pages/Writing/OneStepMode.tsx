@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { Button, Select, Typography } from "antd";
+import { Button, Select, Typography, message } from "antd";
 import { FileTextOutlined, StopOutlined } from "@ant-design/icons";
 import Markdown from "react-markdown";
 import { useWritingStore } from "../../stores/useWritingStore";
 import { listTemplates } from "../../api/templates";
+import { downloadFile } from "../../api/files";
 import type { TemplateDef } from "../../types/api";
 
 export function OneStepMode() {
@@ -202,7 +203,13 @@ export function OneStepMode() {
                 <Button
                   type="primary"
                   onClick={() => {
-                    /* download logic */
+                    const outputPath =
+                      useWritingStore.getState().outputPath;
+                    if (outputPath) {
+                      window.open(downloadFile(outputPath), "_blank");
+                    } else {
+                      message.info("暂无可下载文件");
+                    }
                   }}
                 >
                   下载 .docx

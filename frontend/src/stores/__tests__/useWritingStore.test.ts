@@ -7,6 +7,7 @@ describe("useWritingStore", () => {
     useWritingStore.setState({
       mode: "onestep",
       content: "",
+      outputPath: null,
       isStreaming: false,
       error: null,
       selectedRefs: [],
@@ -41,8 +42,23 @@ describe("useWritingStore", () => {
 
       const state = useWritingStore.getState();
       expect(state.content).toBe("生成的公文内容");
+      expect(state.outputPath).toBeNull();
       expect(state.isStreaming).toBe(false);
       expect(state.error).toBeNull();
+    });
+
+    it("sets outputPath from generation result", async () => {
+      vi.spyOn(generationApi, "generate").mockResolvedValue({
+        content: "公文内容",
+        sources: [],
+        output_path: "/output/test.docx",
+        template_used: "default",
+      });
+
+      await useWritingStore.getState().generate({ description: "test" });
+
+      const state = useWritingStore.getState();
+      expect(state.outputPath).toBe("/output/test.docx");
     });
 
     it("handles error", async () => {

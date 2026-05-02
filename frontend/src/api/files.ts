@@ -20,14 +20,18 @@ export const uploadFiles = async (
 export const deleteFile = async (
   sourceFile: string,
 ): Promise<{ status: string }> => {
-  const { data } = await client.delete(`/files/${sourceFile}`);
+  const { data } = await client.delete(
+    `/files/${encodeURIComponent(sourceFile)}`,
+  );
   return data;
 };
 
 export const reindexFile = async (
   sourceFile: string,
 ): Promise<{ status: string; chunks_count: number }> => {
-  const { data } = await client.post(`/files/${sourceFile}/reindex`);
+  const { data } = await client.post(
+    `/files/${encodeURIComponent(sourceFile)}/reindex`,
+  );
   return data;
 };
 
@@ -35,12 +39,15 @@ export const updateClassification = async (
   sourceFile: string,
   docType: string,
 ): Promise<{ status: string }> => {
-  const { data } = await client.put(`/files/${sourceFile}/classification`, {
-    doc_type: docType,
-  });
+  const { data } = await client.put(
+    `/files/${encodeURIComponent(sourceFile)}/classification`,
+    {
+      doc_type: docType,
+    },
+  );
   return data;
 };
 
 export const downloadFile = (filePath: string): string => {
-  return `/api/files/download/${filePath}`;
+  return `/api/files/download/${encodeURIComponent(filePath)}`;
 };

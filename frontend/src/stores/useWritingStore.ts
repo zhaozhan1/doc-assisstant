@@ -11,6 +11,7 @@ export type WritingMode = "onestep" | "stepbystep" | "wordtoppt";
 interface WritingState {
   mode: WritingMode;
   content: string;
+  outputPath: string | null;
   isStreaming: boolean;
   error: string | null;
   selectedRefs: string[];
@@ -33,6 +34,7 @@ export const useWritingStore = create<WritingState & WritingActions>(
     return {
       mode: "onestep",
       content: "",
+      outputPath: null,
       isStreaming: false,
       error: null,
       selectedRefs: [],
@@ -42,7 +44,11 @@ export const useWritingStore = create<WritingState & WritingActions>(
         set({ isStreaming: true, error: null });
         try {
           const result = await generationApi.generate(request);
-          set({ content: result.content, isStreaming: false });
+          set({
+            content: result.content,
+            outputPath: result.output_path,
+            isStreaming: false,
+          });
         } catch (err) {
           set({
             error: err instanceof Error ? err.message : "生成失败",
