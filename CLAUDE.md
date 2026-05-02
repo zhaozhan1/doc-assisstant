@@ -4,7 +4,7 @@
 
 公文助手（Doc-Assistant）— 本地化政务公文知识库与 AI 写作辅助系统。单用户、单机部署，从历史文档自动构建知识库，辅助生成符合公文规范的初稿。
 
-**当前状态**：阶段四（Web UI）编码完成，分支 `feature/web-ui` 待合并到 main。
+**当前状态**：阶段五（Word 转 PPT + 优化与加固）已完成并合并到 main。全部 5 个阶段交付完成。
 
 ## 常用命令
 
@@ -25,7 +25,7 @@ pnpm build && pnpm test && pnpm lint
 
 ## 架构
 
-单体 Web 应用：FastAPI 后端（ingestion/retrieval/generation/llm）+ React 前端（知识库/写作/模板/设置）+ ChromaDB 向量库。Embedding 用 Ollama（bge-large-zh-v1.5），Chat 用 Ollama（qwen2.5）或 Claude API。
+单体 Web 应用：FastAPI 后端（ingestion/retrieval/generation/llm）+ React 前端（知识库/写作/模板/设置/Word→PPT）+ ChromaDB 向量库。Embedding 用 Ollama（bge-large-zh-v1.5），Chat 用 Ollama（qwen2.5）或 Claude API。
 
 数据流：文件导入 → 解压/提取/分类/分块/向量化 → 入库 → 检索 → Prompt → LLM → Word/PPT
 
