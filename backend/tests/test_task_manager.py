@@ -234,3 +234,36 @@ class TestSecurity:
             tm = TaskManager(mock_ingester)
             tm.TASKS_DIR = tmp_tasks_dir
         assert len(tm._tasks) == 0
+
+    @pytest.mark.asyncio
+    async def test_oversized_file_rejected(self, task_manager: TaskManager, tmp_path: Path) -> None:
+        """Files exceeding MAX_FILE_SIZE should be skipped with failed status."""
+        big_file = tmp_path / "huge.txt"
+        big_file.write_text("x" * 200)
+
+        with patch.object(TaskManager, "MAX_FILE_SIZE", 100):
+            task_id = await task_manager.start_import([big_file])
+            await asyncio.sleep(0.3)
+
+        progress = task_manager.get_progress(task_id)
+        assert progress.status == TaskStatus.COMPLETED
+        assert progress.failed == 1
+        assert progress.processed == 1
+        assert "文件过大" in progress.failed_files[0].error
+
+    @pytest.mark.asyncio
+    async def test_normal_sized_file_passes(self, task_manager: TaskManager, tmp_path: Path) -> None:
+        """Files under MAX_FILE_SIZE should be processed normally."""
+        small_file = tmp_path / "small.txt"
+        small_file.write_text("test content")
+
+        mock_ingester = task_manager._ingester
+        mock_ingester.process_file.return_value = FileResult(path=str(small_file), status="success", chunks_count=1)
+
+        with patch.object(TaskManager, "MAX_FILE_SIZE", 100):
+            task_id = await task_manager.start_import([small_file])
+            await asyncio.sleep(0.3)
+
+        progress = task_manager.get_progress(task_id)
+        assert progress.status == TaskStatus.COMPLETED
+        assert progress.success == 1

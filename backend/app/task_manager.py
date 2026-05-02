@@ -18,6 +18,7 @@ _UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f
 
 class TaskManager:
     TASKS_DIR = "./data/tasks"
+    MAX_FILE_SIZE = 100 * 1024 * 1024  # 100 MB
 
     def __init__(self, ingester: object) -> None:
         self._ingester = ingester
@@ -64,6 +65,11 @@ class TaskManager:
                     task.status = TaskStatus.CANCELLED
                     self._save_task(task)
                     return
+                oversized = self._check_size(path)
+                if oversized:
+                    self._record_result(task, oversized)
+                    self._save_task(task)
+                    continue
                 self._record_result(task, await self._ingester.process_file(path))
                 self._save_task(task)
         else:
@@ -75,6 +81,12 @@ class TaskManager:
                 nonlocal cancelled
                 async with semaphore:
                     if cancelled or self._cancel_events[task.task_id].is_set():
+                        return
+                    oversized = self._check_size(path)
+                    if oversized:
+                        async with lock:
+                            self._record_result(task, oversized)
+                            self._save_task(task)
                         return
                     result = await self._ingester.process_file(path)
                     async with lock:
@@ -106,6 +118,15 @@ class TaskManager:
         else:
             task.skipped += 1
         task.updated_at = datetime.now().isoformat()
+
+    def _check_size(self, path: Path) -> FileResult | None:
+        try:
+            size = path.stat().st_size
+        except OSError:
+            return None
+        if size > self.MAX_FILE_SIZE:
+            return FileResult(path=str(path), status="failed", error=f"文件过大: {size} 字节")
+        return None
 
     async def cancel_task(self, task_id: str) -> None:
         if task_id in self._cancel_events:
