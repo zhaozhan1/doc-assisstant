@@ -28,6 +28,10 @@ class OnlineSearchFactory:
     def create(config: OnlineSearchConfig) -> BaseOnlineSearchProvider | None:
         if not config.enabled:
             return None
+        if config.provider == "baidu":
+            from app.retrieval.baidu_provider import BaiduSearchProvider
+
+            return BaiduSearchProvider()
         raise ValueError(f"未实现的在线搜索 Provider: {config.provider}")
 
 

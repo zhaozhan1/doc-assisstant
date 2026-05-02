@@ -32,26 +32,72 @@ from app.task_manager import TaskManager
 logger = logging.getLogger(__name__)
 
 
-def setup_logging(config: LoggingConfig) -> None:
-    log_format = "%(asctime)s [%(levelname)s] %(name)s — %(message)s"
+def setup_logging(config: LoggingConfig, *, _force: bool = False) -> None:
+    import structlog
+
     log_level = getattr(logging, config.level.upper(), logging.INFO)
 
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)
 
     # Avoid re-adding handlers if they already exist (e.g. during hot reload)
-    if not root_logger.handlers:
+    if _force or not root_logger.handlers:
+        if _force:
+            for h in root_logger.handlers[:]:
+                root_logger.removeHandler(h)
+
+        shared_processors: list = [
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.add_logger_name,
+            structlog.processors.TimeStamper(fmt="iso"),
+        ]
+
         console_handler = logging.StreamHandler()
         console_handler.setLevel(log_level)
-        console_handler.setFormatter(logging.Formatter(log_format))
+        console_handler.setFormatter(
+            structlog.stdlib.ProcessorFormatter(
+                processors=[
+                    *shared_processors,
+                    structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+                    structlog.dev.ConsoleRenderer(),
+                ],
+                foreign_pre_chain=shared_processors,
+            )
+        )
         root_logger.addHandler(console_handler)
 
         log_path = Path(config.file)
         log_path.parent.mkdir(parents=True, exist_ok=True)
         file_handler = RotatingFileHandler(config.file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8")
         file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(logging.Formatter(log_format))
+        file_handler.setFormatter(
+            structlog.stdlib.ProcessorFormatter(
+                processors=[
+                    *shared_processors,
+                    structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+                    structlog.processors.JSONRenderer(),
+                ],
+                foreign_pre_chain=shared_processors,
+            )
+        )
         root_logger.addHandler(file_handler)
+
+    structlog.configure(
+        processors=[
+            structlog.contextvars.merge_contextvars,
+            structlog.stdlib.filter_by_level,
+            structlog.stdlib.add_logger_name,
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.UnicodeDecoder(),
+            structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+        ],
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True,
+    )
 
 
 def create_app() -> FastAPI:
@@ -69,7 +115,11 @@ def create_app() -> FastAPI:
         local_search = LocalSearch(vector_store, embed_llm)
         online_search = OnlineSearchService.from_config(config.online_search)
         fusion = Fusion()
-        retriever = Retriever(local_search, online_search, fusion)
+        query_rewriter = None
+        if config.knowledge_base.enable_query_rewrite:
+            from app.retrieval.query_rewriter import QueryRewriter
+            query_rewriter = QueryRewriter(llm)
+        retriever = Retriever(local_search, online_search, fusion, query_rewriter=query_rewriter)
         file_service = FileService(vector_store, ingester)
         settings_service = SettingsService(config)
 

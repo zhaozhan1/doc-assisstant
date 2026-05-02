@@ -58,30 +58,54 @@ class TaskManager:
         task.status = TaskStatus.RUNNING
         self._save_task(task)
 
-        for path in paths:
-            if self._cancel_events[task.task_id].is_set():
+        if len(paths) <= 1:
+            for path in paths:
+                if self._cancel_events[task.task_id].is_set():
+                    task.status = TaskStatus.CANCELLED
+                    self._save_task(task)
+                    return
+                self._record_result(task, await self._ingester.process_file(path))
+                self._save_task(task)
+        else:
+            semaphore = asyncio.Semaphore(4)
+            lock = asyncio.Lock()
+            cancelled = False
+
+            async def _bounded(path: Path) -> None:
+                nonlocal cancelled
+                async with semaphore:
+                    if cancelled or self._cancel_events[task.task_id].is_set():
+                        return
+                    result = await self._ingester.process_file(path)
+                    async with lock:
+                        if self._cancel_events[task.task_id].is_set():
+                            cancelled = True
+                            return
+                        self._record_result(task, result)
+                        self._save_task(task)
+
+            await asyncio.gather(*[_bounded(p) for p in paths])
+
+            if cancelled:
                 task.status = TaskStatus.CANCELLED
                 self._save_task(task)
                 return
 
-            result = await self._ingester.process_file(path)
-            task.processed += 1
-
-            if result.status == "success":
-                task.success += 1
-            elif result.status == "failed":
-                task.failed += 1
-                task.failed_files.append(result)
-            else:
-                task.skipped += 1
-
-            task.pending_files = [str(p) for p in paths[task.processed :]]
+        if task.status == TaskStatus.RUNNING:
+            task.status = TaskStatus.COMPLETED
             task.updated_at = datetime.now().isoformat()
             self._save_task(task)
 
-        task.status = TaskStatus.COMPLETED
+    def _record_result(self, task: TaskProgress, result: FileResult) -> None:
+        task.processed += 1
+        if result.status == "success":
+            task.success += 1
+        elif result.status == "failed":
+            task.failed += 1
+            task.failed_files.append(result)
+        else:
+            task.skipped += 1
         task.updated_at = datetime.now().isoformat()
-        self._save_task(task)
 
     async def cancel_task(self, task_id: str) -> None:
         if task_id in self._cancel_events:

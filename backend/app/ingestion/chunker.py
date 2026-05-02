@@ -88,3 +88,14 @@ class Chunker:
         if not text or self._chunk_overlap <= 0:
             return ""
         return text[-self._chunk_overlap :]
+
+    def smart_split(self, doc: ExtractedDoc, meta: DocumentMetadata) -> list[Chunk]:
+        """Split with a larger effective chunk size to respect paragraph boundaries."""
+        if not doc.text.strip():
+            return []
+        old_size = self._chunk_size
+        self._chunk_size = min(int(old_size * 1.6), 800)
+        try:
+            return self.split(doc, meta)
+        finally:
+            self._chunk_size = old_size

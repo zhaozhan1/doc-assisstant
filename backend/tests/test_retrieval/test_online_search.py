@@ -69,6 +69,6 @@ class TestOnlineSearchFactory:
         assert result is None
 
     def test_factory_unimplemented_provider_raises(self) -> None:
-        config = OnlineSearchConfig(enabled=True, provider="baidu")
+        config = OnlineSearchConfig(enabled=True, provider="unknown_provider")
         with pytest.raises(ValueError, match="未实现的在线搜索 Provider"):
             OnlineSearchFactory.create(config)
