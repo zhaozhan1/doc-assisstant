@@ -7,6 +7,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
+from app.api.middleware import register_exception_handlers
 from app.api.routes import files, generation, health, retrieval, settings, templates
 from app.config import AppConfig, LoggingConfig
 from app.db.vector_store import VectorStore
@@ -101,6 +102,7 @@ def create_app() -> FastAPI:
         yield
 
     app = FastAPI(title="公文助手", version="0.1.0", lifespan=_lifespan)
+    register_exception_handlers(app)
     app.include_router(health.router)
     app.include_router(retrieval.router)
     app.include_router(files.router)
