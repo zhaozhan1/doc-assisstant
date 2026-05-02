@@ -13,6 +13,8 @@ class KnowledgeBaseConfig(BaseModel):
     metadata_path: str = "./data/metadata"
     chunk_size: int = Field(default=500, ge=100, le=2000)
     chunk_overlap: int = Field(default=50, ge=0, le=200)
+    enable_query_rewrite: bool = True
+    smart_chunking: bool = False
 
 
 class OllamaConfig(BaseModel):

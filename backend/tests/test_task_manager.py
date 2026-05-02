@@ -139,6 +139,65 @@ class TestPersistence:
         assert progress.success == 1
 
 
+class TestParallelImport:
+    @pytest.mark.asyncio
+    async def test_multiple_files_processed_concurrently(
+        self, task_manager: TaskManager, mock_ingester: AsyncMock, tmp_path: Path
+    ) -> None:
+        """Multiple files should be processed in parallel, not sequentially."""
+        files = [tmp_path / f"{i}.txt" for i in range(4)]
+        for f in files:
+            f.write_text("test")
+
+        import time
+
+        async def slow_process(path):
+            await asyncio.sleep(0.15)
+            return FileResult(path=str(path), status="success")
+
+        mock_ingester.process_file.side_effect = slow_process
+
+        start = time.monotonic()
+        task_id = await task_manager.start_import(files)
+        # Wait until completed (parallel should finish in ~0.15s, sequential ~0.6s)
+        for _ in range(20):
+            await asyncio.sleep(0.05)
+            progress = task_manager.get_progress(task_id)
+            if progress.status == TaskStatus.COMPLETED:
+                break
+        elapsed = time.monotonic() - start
+
+        assert progress.status == TaskStatus.COMPLETED
+        assert progress.success == 4
+        # 4 files * 0.15s sequential = 0.6s+; parallel (4 concurrent) ~0.15s + overhead
+        assert elapsed < 0.5, f"Processing took {elapsed:.2f}s, likely not parallel"
+
+    @pytest.mark.asyncio
+    async def test_parallel_results_counted_correctly(
+        self, task_manager: TaskManager, mock_ingester: AsyncMock, tmp_path: Path
+    ) -> None:
+        """Parallel processing should still count success/failure/skipped correctly."""
+        files = [tmp_path / f"{i}.txt" for i in range(3)]
+        for f in files:
+            f.write_text("test")
+
+        mock_ingester.process_file.side_effect = [
+            FileResult(path=str(files[0]), status="success", chunks_count=5),
+            FileResult(path=str(files[1]), status="failed", error="error"),
+            FileResult(path=str(files[2]), status="skipped"),
+        ]
+
+        task_id = await task_manager.start_import(files)
+        await asyncio.sleep(0.5)
+
+        progress = task_manager.get_progress(task_id)
+        assert progress.status == TaskStatus.COMPLETED
+        assert progress.processed == 3
+        assert progress.success == 1
+        assert progress.failed == 1
+        assert progress.skipped == 1
+
+
 class TestSecurity:
     @pytest.mark.asyncio
     async def test_invalid_resume_task_id_rejected(self, task_manager: TaskManager, tmp_path: Path) -> None:
@@ -175,3 +234,36 @@ class TestSecurity:
             tm = TaskManager(mock_ingester)
             tm.TASKS_DIR = tmp_tasks_dir
         assert len(tm._tasks) == 0
+
+    @pytest.mark.asyncio
+    async def test_oversized_file_rejected(self, task_manager: TaskManager, tmp_path: Path) -> None:
+        """Files exceeding MAX_FILE_SIZE should be skipped with failed status."""
+        big_file = tmp_path / "huge.txt"
+        big_file.write_text("x" * 200)
+
+        with patch.object(TaskManager, "MAX_FILE_SIZE", 100):
+            task_id = await task_manager.start_import([big_file])
+            await asyncio.sleep(0.3)
+
+        progress = task_manager.get_progress(task_id)
+        assert progress.status == TaskStatus.COMPLETED
+        assert progress.failed == 1
+        assert progress.processed == 1
+        assert "文件过大" in progress.failed_files[0].error
+
+    @pytest.mark.asyncio
+    async def test_normal_sized_file_passes(self, task_manager: TaskManager, tmp_path: Path) -> None:
+        """Files under MAX_FILE_SIZE should be processed normally."""
+        small_file = tmp_path / "small.txt"
+        small_file.write_text("test content")
+
+        mock_ingester = task_manager._ingester
+        mock_ingester.process_file.return_value = FileResult(path=str(small_file), status="success", chunks_count=1)
+
+        with patch.object(TaskManager, "MAX_FILE_SIZE", 100):
+            task_id = await task_manager.start_import([small_file])
+            await asyncio.sleep(0.3)
+
+        progress = task_manager.get_progress(task_id)
+        assert progress.status == TaskStatus.COMPLETED
+        assert progress.success == 1

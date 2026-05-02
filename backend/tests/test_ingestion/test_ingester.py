@@ -30,6 +30,7 @@ class MockConfig:
     class KnowledgeBase:
         chunk_size = 100
         chunk_overlap = 20
+        smart_chunking = False
 
     knowledge_base = KnowledgeBase()
     ocr = OCRConfig()

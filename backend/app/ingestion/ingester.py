@@ -25,6 +25,7 @@ class Ingester:
             config.knowledge_base.chunk_size,
             config.knowledge_base.chunk_overlap,
         )
+        self._use_smart_chunking = config.knowledge_base.smart_chunking
         self.vector_store = vector_store
 
     async def process_file(self, path: Path) -> FileResult:
@@ -49,7 +50,9 @@ class Ingester:
                 if existing:
                     continue
 
-                chunks = self.chunker.split(doc, meta)
+                chunks = (
+                    self.chunker.smart_split(doc, meta) if self._use_smart_chunking else self.chunker.split(doc, meta)
+                )
                 for c in chunks:
                     c.metadata["file_md5"] = meta.file_md5
                     c.metadata["import_time"] = meta.import_time.isoformat()
