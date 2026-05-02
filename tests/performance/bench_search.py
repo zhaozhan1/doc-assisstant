@@ -7,13 +7,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "backend"))
 
 
-async def bench_search(queries: list[str] | None = None, iterations: int = 5):
+async def bench_search(config_file: str | None = None, queries: list[str] | None = None, iterations: int = 5):
     from app.config import AppConfig
     from app.db.vector_store import VectorStore
     from app.llm.factory import create_embed_provider
 
     queries = queries or ["安全生产通知", "2026年工作总结", "信息化建设方案", "人才培养规划"]
-    config = AppConfig()
+    kwargs = {"_yaml_file": config_file} if config_file else {}
+    config = AppConfig(**kwargs)
     embed_llm = create_embed_provider(config.llm)
     vector_store = VectorStore(config.knowledge_base.db_path, embed_llm)
 
@@ -30,4 +31,5 @@ async def bench_search(queries: list[str] | None = None, iterations: int = 5):
 
 
 if __name__ == "__main__":
-    asyncio.run(bench_search())
+    config_file = sys.argv[1] if len(sys.argv) > 1 else None
+    asyncio.run(bench_search(config_file))

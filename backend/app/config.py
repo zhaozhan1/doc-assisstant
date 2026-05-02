@@ -23,6 +23,13 @@ class OllamaConfig(BaseModel):
     embed_model: str = "bge-large-zh-v1.5"
 
 
+class OpenAICompatibleConfig(BaseModel):
+    base_url: str = "http://localhost:18008/v1"
+    api_key: str = ""
+    chat_model: str = "qwen3"
+    embed_model: str = "bge-m3"
+
+
 class ClaudeConfig(BaseModel):
     base_url: str = "https://api.anthropic.com"
     api_key: str = ""
@@ -36,9 +43,9 @@ class ClaudeConfig(BaseModel):
 
 
 class LLMConfig(BaseModel):
-    default_provider: Literal["ollama", "claude"] = "ollama"
-    embed_provider: Literal["ollama"] = "ollama"
-    providers: dict[str, OllamaConfig | ClaudeConfig] = {
+    default_provider: Literal["ollama", "claude", "openai"] = "ollama"
+    embed_provider: Literal["ollama", "openai"] = "ollama"
+    providers: dict[str, OllamaConfig | ClaudeConfig | OpenAICompatibleConfig] = {
         "ollama": OllamaConfig(),
     }
 
