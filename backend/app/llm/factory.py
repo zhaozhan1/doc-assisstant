@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from app.config import ClaudeConfig, LLMConfig, OllamaConfig
+from app.config import ClaudeConfig, LLMConfig, OllamaConfig, OpenAICompatibleConfig
 from app.llm.base import BaseLLMProvider
 from app.llm.claude_provider import ClaudeProvider
 from app.llm.ollama_provider import OllamaProvider
+from app.llm.openai_provider import OpenAIProvider
 
 
 def create_provider(config: LLMConfig) -> BaseLLMProvider:
@@ -22,6 +23,13 @@ def create_provider(config: LLMConfig) -> BaseLLMProvider:
             base_url=provider_config.base_url,
             chat_model=provider_config.chat_model,
         )
+    elif name == "openai" and isinstance(provider_config, OpenAICompatibleConfig):
+        return OpenAIProvider(
+            base_url=provider_config.base_url,
+            api_key=provider_config.api_key,
+            chat_model=provider_config.chat_model,
+            embed_model=provider_config.embed_model,
+        )
     raise ValueError(f"未知 Provider: {name}")
 
 
@@ -31,6 +39,13 @@ def create_embed_provider(config: LLMConfig) -> BaseLLMProvider:
     if name == "ollama" and isinstance(provider_config, OllamaConfig):
         return OllamaProvider(
             base_url=provider_config.base_url,
+            chat_model=provider_config.chat_model,
+            embed_model=provider_config.embed_model,
+        )
+    elif name == "openai" and isinstance(provider_config, OpenAICompatibleConfig):
+        return OpenAIProvider(
+            base_url=provider_config.base_url,
+            api_key=provider_config.api_key,
             chat_model=provider_config.chat_model,
             embed_model=provider_config.embed_model,
         )

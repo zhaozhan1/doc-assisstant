@@ -23,6 +23,19 @@ class OllamaConfig(BaseModel):
     embed_model: str = "bge-large-zh-v1.5"
 
 
+class OpenAICompatibleConfig(BaseModel):
+    base_url: str = "http://localhost:18008/v1"
+    api_key: str = ""
+    chat_model: str = "qwen3"
+    embed_model: str = "bge-m3"
+
+    @model_validator(mode="after")
+    def _resolve_api_key(self) -> OpenAICompatibleConfig:
+        if not self.api_key:
+            self.api_key = os.environ.get("OPENAI_API_KEY", "")
+        return self
+
+
 class ClaudeConfig(BaseModel):
     base_url: str = "https://api.anthropic.com"
     api_key: str = ""
@@ -36,9 +49,9 @@ class ClaudeConfig(BaseModel):
 
 
 class LLMConfig(BaseModel):
-    default_provider: Literal["ollama", "claude"] = "ollama"
-    embed_provider: Literal["ollama"] = "ollama"
-    providers: dict[str, OllamaConfig | ClaudeConfig] = {
+    default_provider: Literal["ollama", "claude", "openai"] = "ollama"
+    embed_provider: Literal["ollama", "openai"] = "ollama"
+    providers: dict[str, OllamaConfig | ClaudeConfig | OpenAICompatibleConfig] = {
         "ollama": OllamaConfig(),
     }
 
@@ -69,6 +82,13 @@ class GenerationConfig(BaseModel):
     word_template_path: str = ""
 
 
+class ServerConfig(BaseModel):
+    cors_origins: list[str] = ["http://localhost:5173"]
+    host: str = "127.0.0.1"
+    port: int = 8000
+    workers: int = 1
+
+
 class AppConfig(BaseSettings):
     knowledge_base: KnowledgeBaseConfig = KnowledgeBaseConfig()
     llm: LLMConfig = LLMConfig()
@@ -76,10 +96,13 @@ class AppConfig(BaseSettings):
     logging: LoggingConfig = LoggingConfig()
     online_search: OnlineSearchConfig = OnlineSearchConfig()
     generation: GenerationConfig = GenerationConfig()
+    server: ServerConfig = ServerConfig()
 
     model_config = SettingsConfigDict(
         yaml_file="config.yaml",
         yaml_file_encoding="utf-8",
+        env_file=".env",
+        env_file_encoding="utf-8",
         extra="ignore",
     )
 

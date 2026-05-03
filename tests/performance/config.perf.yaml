@@ -1,0 +1,29 @@
+# 性能测试专用配置 — 使用 oMLX
+
+knowledge_base:
+  db_path: "./data/perf_chroma"
+  chunk_size: 500
+  chunk_overlap: 50
+  enable_query_rewrite: false
+  smart_chunking: false
+
+llm:
+  default_provider: "openai"
+  embed_provider: "openai"
+  providers:
+    openai:
+      base_url: "http://127.0.0.1:18008/v1"
+      api_key: ""              # 从环境变量 OPENAI_API_KEY 读取
+      chat_model: "Qwen3.6-35B-A3B-MLX-8bit"
+      embed_model: "bge-m3-mlx-fp16"
+
+logging:
+  level: "WARNING"
+  file: "./logs/perf.log"
+
+server:
+  cors_origins:
+    - "http://localhost:5173"
+  host: "127.0.0.1"
+  port: 8000
+  workers: 1

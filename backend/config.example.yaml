@@ -1,0 +1,67 @@
+# 公文助手配置文件示例
+# 复制为 config.yaml 并根据实际情况修改
+
+# ---------- 知识库 ----------
+knowledge_base:
+  source_folder: ""              # 原始文档目录（导入时使用）
+  db_path: "./data/chroma_db"    # ChromaDB 向量库存路径
+  metadata_path: "./data/metadata"
+  chunk_size: 500                # 分块大小（100-2000）
+  chunk_overlap: 50              # 分块重叠（0-200）
+  enable_query_rewrite: true     # 启用 LLM 查询改写
+  smart_chunking: false          # 启用智能分块（尊重段落边界）
+
+# ---------- LLM ----------
+llm:
+  default_provider: "ollama"     # 默认对话 Provider: ollama | claude | openai
+  embed_provider: "ollama"       # 向量化 Provider: ollama | openai
+  providers:
+    ollama:
+      base_url: "http://localhost:11434"
+      chat_model: "qwen2.5:14b"
+      embed_model: "bge-large-zh-v1.5"
+    # claude:
+    #   base_url: "https://api.anthropic.com"
+    #   api_key: ""              # 留空则读取环境变量 CLAUDE_API_KEY
+    #   chat_model: "claude-sonnet-4-20250514"
+    # openai:                    # OpenAI 兼容 API（oMLX 等）
+    #   base_url: "http://127.0.0.1:18008/v1"
+    #   api_key: ""
+    #   chat_model: "Qwen3.6-35B-A3B-MLX-8bit"
+    #   embed_model: "bge-m3-mlx-fp16"
+
+# ---------- OCR ----------
+ocr:
+  tesseract_cmd: ""              # Tesseract 可执行文件路径（留空使用系统默认）
+
+# ---------- 日志 ----------
+logging:
+  level: "INFO"                  # DEBUG | INFO | WARNING | ERROR
+  file: "./logs/app.log"         # 日志文件路径
+
+# ---------- 在线搜索 ----------
+online_search:
+  enabled: false
+  provider: "tavily"             # tavily | baidu
+  api_key: ""
+  base_url: ""
+  domains:
+    - "gov.cn"
+  max_results: 3                 # 1-10
+
+# ---------- 写作生成 ----------
+generation:
+  output_format: "docx"
+  save_path: "./output"
+  include_sources: true
+  max_prompt_tokens: 4096
+  word_template_path: ""         # 自定义 Word 模板路径
+
+# ---------- 服务器 ----------
+server:
+  cors_origins:
+    - "http://localhost:5173"     # 前端开发服务器
+    # - "https://your-domain.com"  # 生产环境域名
+  host: "127.0.0.1"              # 监听地址（容器部署建议 0.0.0.0）
+  port: 8000
+  workers: 1                     # uvicorn worker 数量
