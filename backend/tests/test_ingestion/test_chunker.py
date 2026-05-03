@@ -23,6 +23,7 @@ def sample_meta() -> DocumentMetadata:
         import_time=datetime.now(),
         doc_type="通知",
         doc_date=datetime(2024, 1, 1),
+        file_created_time=datetime(2024, 1, 1, 10, 30, 0),
     )
 
 
@@ -45,6 +46,7 @@ class TestNormalChunking:
         chunks = chunker.split(doc, sample_meta)
         assert chunks[0].metadata["doc_type"] == "通知"
         assert chunks[0].metadata["doc_date"] == "2024-01-01T00:00:00"
+        assert chunks[0].metadata["file_created_time"] == "2024-01-01T10:30:00"
         assert chunks[0].chunk_index == 0
 
 
