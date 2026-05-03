@@ -13,6 +13,7 @@ from app.models.search import (
     LLMSettingsUpdate,
     OnlineSearchConfigUpdate,
 )
+from app.paths import resolve_path
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 class SettingsService:
     def __init__(self, config: AppConfig, config_path: Path | str = "config.yaml") -> None:
         self._config = config
-        self._config_path = Path(config_path)
+        self._config_path = Path(resolve_path(str(config_path)))
 
     def get_online_search_config(self) -> OnlineSearchConfig:
         return self._config.online_search
