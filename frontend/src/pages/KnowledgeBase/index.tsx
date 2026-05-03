@@ -14,7 +14,7 @@ import {
   Col,
   message,
 } from "antd";
-import { InboxOutlined } from "@ant-design/icons";
+import { InboxOutlined, FolderOpenOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useFileStore } from "../../stores/useFileStore";
 import { useTaskStore } from "../../stores/useTaskStore";
@@ -249,39 +249,41 @@ export default function KnowledgeBase() {
       </Row>
 
       {/* Upload Area */}
-      <Upload.Dragger
-        multiple
-        showUploadList={false}
-        beforeUpload={() => false}
-        onChange={(info) => {
-          const fileList = info.fileList
-            .map((f) => f.originFileObj)
-            .filter((f): f is NonNullable<typeof f> => f != null);
-          if (fileList.length > 0) handleUpload(fileList as File[]);
-        }}
-        style={{ marginBottom: 8 }}
-      >
-        <p className="ant-upload-drag-icon">
-          <InboxOutlined />
-        </p>
-        <p className="ant-upload-text">
-          拖拽文件到此处，或点击选择文件
-        </p>
-      </Upload.Dragger>
-      <Upload
-        directory
-        showUploadList={false}
-        beforeUpload={() => false}
-        onChange={(info) => {
-          const fileList = info.fileList
-            .map((f) => f.originFileObj)
-            .filter((f): f is NonNullable<typeof f> => f != null);
-          if (fileList.length > 0) handleUpload(fileList as File[]);
-        }}
-        style={{ marginBottom: 24, display: "inline-block" }}
-      >
-        <Button style={{ width: "100%" }}>选择文件夹</Button>
-      </Upload>
+      <Space direction="vertical" style={{ width: "100%", marginBottom: 24 }}>
+        <Upload.Dragger
+          multiple
+          showUploadList={false}
+          beforeUpload={() => false}
+          onChange={(info) => {
+            const fileList = info.fileList
+              .map((f) => f.originFileObj)
+              .filter((f): f is NonNullable<typeof f> => f != null);
+            if (fileList.length > 0) handleUpload(fileList as File[]);
+          }}
+        >
+          <p className="ant-upload-drag-icon">
+            <InboxOutlined />
+          </p>
+          <p className="ant-upload-text">
+            拖拽文件到此处，或点击选择文件
+          </p>
+        </Upload.Dragger>
+        <Upload
+          directory
+          showUploadList={false}
+          beforeUpload={() => false}
+          onChange={(info) => {
+            const fileList = info.fileList
+              .map((f) => f.originFileObj)
+              .filter((f): f is NonNullable<typeof f> => f != null);
+            if (fileList.length > 0) handleUpload(fileList as File[]);
+          }}
+        >
+          <Button icon={<FolderOpenOutlined />} block>
+            选择文件夹
+          </Button>
+        </Upload>
+      </Space>
 
       {/* Import Progress / Result */}
       {taskId && progress && (

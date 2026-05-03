@@ -213,6 +213,11 @@ describe("KnowledgeBase", () => {
     expect(screen.getByText("正在导入...")).toBeInTheDocument();
   });
 
+  it("renders folder upload button with icon", () => {
+    render(<KnowledgeBase />);
+    expect(screen.getByText("选择文件夹")).toBeInTheDocument();
+  });
+
   it("shows import result summary when task completed", () => {
     mockTaskStoreState.taskId = "task-done";
     mockTaskStoreState.progress = {
