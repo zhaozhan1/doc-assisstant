@@ -12,13 +12,16 @@ import webbrowser
 import uvicorn
 
 from app.config import AppConfig
+from app.paths import resolve_path
 
 
 def _kill_existing(host: str, port: int) -> None:
     """Kill any process already listening on the given port."""
+    import shutil
     try:
+        lsof = shutil.which("lsof") or "/usr/sbin/lsof"
         result = subprocess.run(
-            ["lsof", "-ti", f":{port}"],
+            [lsof, "-ti", f":{port}"],
             capture_output=True,
             text=True,
             timeout=5,
@@ -46,7 +49,7 @@ def _open_browser(url: str, host: str, port: int) -> None:
 
 
 def main() -> None:
-    config = AppConfig()
+    config = AppConfig(_yaml_file=resolve_path("config.yaml"))
     host = config.server.host
     port = config.server.port
     url = f"http://{host}:{port}"

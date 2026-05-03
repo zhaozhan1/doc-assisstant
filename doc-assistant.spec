@@ -14,6 +14,10 @@ TEMPLATES_DIR = PROJECT_ROOT / 'backend' / 'app' / 'generation' / 'templates'
 import docx as _docx
 DOCX_TEMPLATES_DIR = str(Path(_docx.__file__).parent / 'templates')
 
+# python-pptx templates (needed for Presentation() without explicit template)
+import pptx as _pptx
+PPTX_TEMPLATES_DIR = str(Path(_pptx.__file__).parent / 'templates')
+
 chromadb_datas, chromadb_binaries, chromadb_hiddenimports = collect_all('chromadb')
 
 a = Analysis(
@@ -24,6 +28,7 @@ a = Analysis(
         (str(FRONTEND_DIST), 'frontend'),
         (str(TEMPLATES_DIR), 'app/generation/templates'),
         (DOCX_TEMPLATES_DIR, 'docx/templates'),
+        (PPTX_TEMPLATES_DIR, 'pptx/templates'),
     ] + chromadb_datas,
     hiddenimports=[
         'uvicorn.logging',
