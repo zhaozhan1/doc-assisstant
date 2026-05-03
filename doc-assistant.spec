@@ -2,20 +2,24 @@
 import sys
 from pathlib import Path
 
+from PyInstaller.utils.hooks import collect_all
+
 block_cipher = None
 
 PROJECT_ROOT = Path('.').resolve()
 FRONTEND_DIST = PROJECT_ROOT / 'frontend' / 'dist'
 TEMPLATES_DIR = PROJECT_ROOT / 'backend' / 'app' / 'generation' / 'templates'
 
+chromadb_datas, chromadb_binaries, chromadb_hiddenimports = collect_all('chromadb')
+
 a = Analysis(
     ['backend/app/__main__.py'],
     pathex=['backend'],
-    binaries=[],
+    binaries=chromadb_binaries,
     datas=[
         (str(FRONTEND_DIST), 'frontend'),
         (str(TEMPLATES_DIR), 'app/generation/templates'),
-    ],
+    ] + chromadb_datas,
     hiddenimports=[
         'uvicorn.logging',
         'uvicorn.loops',
@@ -45,9 +49,6 @@ a = Analysis(
         'yaml',
         'pydantic',
         'pydantic_settings',
-        'chromadb',
-        'chromadb.config',
-        'chromadb.utils',
         'sqlite3',
         'starlette',
         'starlette.middleware',
@@ -57,7 +58,7 @@ a = Analysis(
         'fastapi',
         'selectolax',
         'selectors',
-    ],
+    ] + chromadb_hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
