@@ -138,6 +138,44 @@ class TestPersistence:
         assert progress.status == TaskStatus.COMPLETED
         assert progress.success == 1
 
+    def test_crash_recovery_downgrades_running_to_pending(self, mock_ingester: AsyncMock, tmp_tasks_dir: str) -> None:
+        """A persisted task with status 'running' should be loaded as 'pending' on recovery."""
+        import json
+        from uuid import uuid4
+
+        tasks_dir = Path(tmp_tasks_dir)
+        tasks_dir.mkdir(parents=True, exist_ok=True)
+
+        # Simulate a persisted task JSON file with status "running"
+        task_id = str(uuid4())
+        task_data = {
+            "task_id": task_id,
+            "status": "running",
+            "total": 5,
+            "processed": 2,
+            "success": 2,
+            "failed": 0,
+            "skipped": 0,
+            "failed_files": [],
+            "pending_files": [],
+            "created_at": "2024-01-01T00:00:00",
+            "updated_at": "2024-01-01T00:01:00",
+        }
+        (tasks_dir / f"{task_id}.json").write_text(json.dumps(task_data), encoding="utf-8")
+
+        # Create a new TaskManager pointing to the same directory
+        with patch.object(TaskManager, "TASKS_DIR", tmp_tasks_dir):
+            tm = TaskManager(mock_ingester)
+            tm.TASKS_DIR = tmp_tasks_dir
+
+        # The task should be loaded with status downgraded to "pending"
+        progress = tm.get_progress(task_id)
+        assert progress.status == TaskStatus.PENDING
+
+        # Verify the task is recoverable via get_unfinished_tasks
+        unfinished = tm.get_unfinished_tasks()
+        assert task_id in [t.task_id for t in unfinished]
+
 
 class TestParallelImport:
     @pytest.mark.asyncio

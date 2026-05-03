@@ -78,15 +78,33 @@ async def update_classification(
 
 _MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
 
-# .docx / .doc files are ZIP-based: magic bytes are PK\x03\x04
 _ZIP_MAGIC = b"PK\x03\x04"
+_OLE2_MAGIC = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
+_PDF_MAGIC = b"%PDF"
+_PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
+_JPG_MAGIC = b"\xff\xd8\xff"
+
+_MAGIC_MAP: dict[str, bytes] = {
+    ".docx": _ZIP_MAGIC,
+    ".xlsx": _ZIP_MAGIC,
+    ".pptx": _ZIP_MAGIC,
+    ".doc": _OLE2_MAGIC,
+    ".xls": _OLE2_MAGIC,
+    ".ppt": _OLE2_MAGIC,
+    ".pdf": _PDF_MAGIC,
+    ".png": _PNG_MAGIC,
+    ".jpg": _JPG_MAGIC,
+    ".jpeg": _JPG_MAGIC,
+}
 
 
 def _validate_file_type(filename: str, content: bytes) -> str | None:
     """Return an error message if file type is invalid, or None if OK."""
     ext = Path(filename).suffix.lower()
-    # .docx/.xlsx/.pptx are ZIP-based; .doc/.xls/.ppt are OLE2-based
-    if ext in (".docx", ".xlsx", ".pptx") and content[:4] != _ZIP_MAGIC:
+    expected = _MAGIC_MAP.get(ext)
+    if expected is None:
+        return None
+    if content[: len(expected)] != expected:
         return f"文件格式不匹配: {filename} 不是有效的文件"
     return None
 
