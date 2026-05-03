@@ -148,7 +148,7 @@ class Extractor:
             tmp_path = Path(tmp.name)
         try:
             subprocess.run(
-                ["textutil", "-convert", "docx", "-output", str(tmp_path), str(path)],
+                ["/usr/bin/textutil", "-convert", "docx", "-output", str(tmp_path), str(path)],
                 check=True,
                 capture_output=True,
             )
@@ -181,7 +181,7 @@ class Extractor:
             tmp_path = Path(tmp.name)
         try:
             subprocess.run(
-                ["textutil", "-convert", "txt", "-output", str(tmp_path), str(path)],
+                ["/usr/bin/textutil", "-convert", "txt", "-output", str(tmp_path), str(path)],
                 check=True,
                 capture_output=True,
             )

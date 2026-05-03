@@ -98,6 +98,9 @@ class SettingsService:
         for flat_key, value in update_data.items():
             for prefix in ("ollama", "claude", "openai"):
                 if flat_key.startswith(f"{prefix}_"):
+                    # Skip empty api_key — frontend sends "" for unchanged passwords
+                    if flat_key.endswith("_api_key") and value == "":
+                        break
                     provider_fields.setdefault(prefix, {})[flat_key.removeprefix(f"{prefix}_")] = value
                     break
 
