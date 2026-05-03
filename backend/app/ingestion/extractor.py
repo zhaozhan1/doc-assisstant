@@ -152,7 +152,9 @@ class Extractor:
                 check=True,
                 capture_output=True,
             )
-            return self._extract_docx(tmp_path)
+            result = self._extract_docx(tmp_path)
+            result.source_path = path
+            return result
         except Exception:
             logger.exception("textutil .doc 转换失败: %s", path)
             return ExtractedDoc(text="", structure=[], source_path=path)
@@ -183,7 +185,9 @@ class Extractor:
                 check=True,
                 capture_output=True,
             )
-            return self._extract_txt(tmp_path)
+            result = self._extract_txt(tmp_path)
+            result.source_path = path
+            return result
         except Exception:
             logger.exception("textutil .ppt 转换失败: %s", path)
             return ExtractedDoc(text="", structure=[], source_path=path)

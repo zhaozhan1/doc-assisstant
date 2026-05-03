@@ -90,6 +90,14 @@ export default function KnowledgeBase() {
     if (error) message.error(error);
   }, [error]);
 
+  // Auto-refresh file list when import completes
+  useEffect(() => {
+    if (progress?.status === "completed") {
+      fetchFiles(buildParams());
+      fetchStats();
+    }
+  }, [progress?.status, buildParams, fetchFiles, fetchStats]);
+
   // Handle upload
   const handleUpload = async (uploadedFiles: File[]) => {
     if (uploadedFiles.length === 0) return;
