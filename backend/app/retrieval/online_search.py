@@ -31,7 +31,7 @@ class OnlineSearchFactory:
         if config.provider == "baidu":
             from app.retrieval.baidu_provider import BaiduSearchProvider
 
-            return BaiduSearchProvider()
+            return BaiduSearchProvider(api_key=config.api_key, base_url=config.base_url)
         raise ValueError(f"未实现的在线搜索 Provider: {config.provider}")
 
 
@@ -53,13 +53,19 @@ class OnlineSearchService:
 
     async def search(self, query: str) -> list[UnifiedSearchResult]:
         if self._provider is None:
+            logger.info("online search skipped: provider is None")
             return []
-        items = await self._provider.search(
-            query,
-            self._config.max_results,
-            self._config.domains or None,
-        )
-        return [self._to_unified(item) for item in items]
+        try:
+            items = await self._provider.search(
+                query,
+                self._config.max_results,
+                self._config.domains or None,
+            )
+            logger.info("online search: query=%s items=%d", query, len(items))
+            return [self._to_unified(item) for item in items]
+        except Exception:
+            logger.warning("online search failed", exc_info=True)
+            return []
 
     def _to_unified(self, item: OnlineSearchItem) -> UnifiedSearchResult:
         return UnifiedSearchResult(

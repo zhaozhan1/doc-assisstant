@@ -2,101 +2,115 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
+import httpx
+
 from app.config import OnlineSearchConfig
 from app.retrieval.online_search import OnlineSearchFactory
 
 
+def _make_response(json_data: dict, status_code: int = 200) -> httpx.Response:
+    return httpx.Response(
+        status_code=status_code,
+        json=json_data,
+        request=httpx.Request("POST", "https://example.com"),
+    )
+
+
 class TestBaiduSearchProvider:
     async def test_search_returns_parsed_results(self) -> None:
-        """Baidu provider should parse HTML response into OnlineSearchItem list."""
         from app.retrieval.baidu_provider import BaiduSearchProvider
 
-        provider = BaiduSearchProvider()
+        provider = BaiduSearchProvider(api_key="test-key")
 
-        html = """
-        <html><body>
-        <div class="result c-container">
-            <h3 class="t"><a href="http://www.example.com/page1">测试标题一</a></h3>
-            <span class="content-right_8Zs40">测试摘要内容一</span>
-        </div>
-        <div class="result c-container">
-            <h3 class="t"><a href="http://www.example.com/page2">测试标题二</a></h3>
-            <span class="content-right_8Zs40">测试摘要内容二</span>
-        </div>
-        </body></html>
-        """
+        api_response = _make_response({
+            "references": [
+                {"title": "测试标题一", "snippet": "测试摘要一", "url": "http://example.com/1"},
+                {"title": "测试标题二", "snippet": "测试摘要二", "url": "http://example.com/2"},
+            ],
+        })
 
-        with patch.object(provider, "_fetch_html", new_callable=AsyncMock, return_value=html):
+        with patch.object(provider._client, "post", new_callable=AsyncMock, return_value=api_response):
             results = await provider.search("测试查询", max_results=3)
 
         assert len(results) == 2
         assert results[0].title == "测试标题一"
-        assert results[0].url == "http://www.example.com/page1"
-        assert results[0].snippet == "测试摘要内容一"
+        assert results[0].url == "http://example.com/1"
+        assert results[0].snippet == "测试摘要一"
         assert results[1].title == "测试标题二"
 
     async def test_search_respects_max_results(self) -> None:
-        """Should limit results to max_results."""
         from app.retrieval.baidu_provider import BaiduSearchProvider
 
-        provider = BaiduSearchProvider()
+        provider = BaiduSearchProvider(api_key="test-key")
 
-        html = """
-        <html><body>
-        <div class="result c-container">
-            <h3 class="t"><a href="http://example.com/1">标题1</a></h3>
-            <span class="content-right_8Zs40">摘要1</span>
-        </div>
-        <div class="result c-container">
-            <h3 class="t"><a href="http://example.com/2">标题2</a></h3>
-            <span class="content-right_8Zs40">摘要2</span>
-        </div>
-        <div class="result c-container">
-            <h3 class="t"><a href="http://example.com/3">标题3</a></h3>
-            <span class="content-right_8Zs40">摘要3</span>
-        </div>
-        </body></html>
-        """
+        api_response = _make_response({
+            "references": [
+                {"title": "标题1", "snippet": "摘要1", "url": "http://example.com/1"},
+                {"title": "标题2", "snippet": "摘要2", "url": "http://example.com/2"},
+                {"title": "标题3", "snippet": "摘要3", "url": "http://example.com/3"},
+            ],
+        })
 
-        with patch.object(provider, "_fetch_html", new_callable=AsyncMock, return_value=html):
+        with patch.object(provider._client, "post", new_callable=AsyncMock, return_value=api_response):
             results = await provider.search("测试", max_results=2)
 
         assert len(results) == 2
 
     async def test_search_with_domain_filter(self) -> None:
-        """Should append site: prefix when domains specified."""
         from app.retrieval.baidu_provider import BaiduSearchProvider
 
-        provider = BaiduSearchProvider()
-        captured_query: list[str] = []
+        provider = BaiduSearchProvider(api_key="test-key")
 
-        async def mock_fetch(query: str) -> str:
-            captured_query.append(query)
-            return "<html><body></body></html>"
+        api_response = _make_response({"references": []})
+        captured_body: list[dict] = []
 
-        with patch.object(provider, "_fetch_html", side_effect=mock_fetch):
+        async def mock_post(url, **kwargs):
+            captured_body.append(kwargs.get("json", {}))
+            return api_response
+
+        with patch.object(provider._client, "post", side_effect=mock_post):
             await provider.search("测试", domains=["gov.cn", "org.cn"])
 
-        assert "site:gov.cn OR site:org.cn" in captured_query[0]
+        assert captured_body[0]["search_filter"]["match"]["site"] == ["gov.cn", "org.cn"]
 
-    async def test_search_empty_html_returns_empty(self) -> None:
-        """Empty HTML should return empty results."""
+    async def test_search_empty_response_returns_empty(self) -> None:
         from app.retrieval.baidu_provider import BaiduSearchProvider
 
-        provider = BaiduSearchProvider()
+        provider = BaiduSearchProvider(api_key="test-key")
 
-        with patch.object(provider, "_fetch_html", new_callable=AsyncMock, return_value="<html><body></body></html>"):
+        api_response = _make_response({"references": []})
+
+        with patch.object(provider._client, "post", new_callable=AsyncMock, return_value=api_response):
             results = await provider.search("测试")
 
         assert results == []
 
-    async def test_search_network_error_returns_empty(self) -> None:
-        """Network error should return empty list, not raise."""
+    async def test_search_api_error_returns_empty(self) -> None:
         from app.retrieval.baidu_provider import BaiduSearchProvider
 
-        provider = BaiduSearchProvider()
+        provider = BaiduSearchProvider(api_key="test-key")
 
-        with patch.object(provider, "_fetch_html", new_callable=AsyncMock, side_effect=Exception("network error")):
+        api_response = _make_response({"code": "error", "message": "rate limited"})
+
+        with patch.object(provider._client, "post", new_callable=AsyncMock, return_value=api_response):
+            results = await provider.search("测试")
+
+        assert results == []
+
+    async def test_search_no_api_key_returns_empty(self) -> None:
+        from app.retrieval.baidu_provider import BaiduSearchProvider
+
+        provider = BaiduSearchProvider(api_key="")
+        results = await provider.search("测试")
+
+        assert results == []
+
+    async def test_search_network_error_returns_empty(self) -> None:
+        from app.retrieval.baidu_provider import BaiduSearchProvider
+
+        provider = BaiduSearchProvider(api_key="test-key")
+
+        with patch.object(provider._client, "post", new_callable=AsyncMock, side_effect=httpx.HTTPError("timeout")):
             results = await provider.search("测试")
 
         assert results == []
@@ -104,8 +118,7 @@ class TestBaiduSearchProvider:
 
 class TestBaiduFactoryIntegration:
     def test_factory_creates_baidu_provider(self) -> None:
-        """Factory should create BaiduSearchProvider when provider='baidu'."""
-        config = OnlineSearchConfig(enabled=True, provider="baidu")
+        config = OnlineSearchConfig(enabled=True, provider="baidu", api_key="test-key")
         provider = OnlineSearchFactory.create(config)
         assert provider is not None
         from app.retrieval.baidu_provider import BaiduSearchProvider
@@ -113,25 +126,23 @@ class TestBaiduFactoryIntegration:
         assert isinstance(provider, BaiduSearchProvider)
 
     async def test_end_to_end_service_with_baidu(self) -> None:
-        """OnlineSearchService with BaiduSearchProvider should return unified results."""
         from app.retrieval.online_search import OnlineSearchService
 
-        config = OnlineSearchConfig(enabled=True, provider="baidu", max_results=2)
+        config = OnlineSearchConfig(enabled=True, provider="baidu", api_key="test-key", max_results=2)
         service = OnlineSearchService.from_config(config)
 
-        html = """
-        <html><body>
-        <div class="result c-container">
-            <h3 class="t"><a href="http://gov.cn/policy">政策文件</a></h3>
-            <span class="content-right_8Zs40">政策摘要内容</span>
-        </div>
-        </body></html>
-        """
+        api_response = _make_response({
+            "references": [
+                {"title": "政策文件", "snippet": "政策摘要", "url": "http://gov.cn/policy"},
+            ],
+        })
 
         from app.retrieval.baidu_provider import BaiduSearchProvider
 
-        with patch.object(BaiduSearchProvider, "_fetch_html", new_callable=AsyncMock, return_value=html):
-            results = await service.search("政策")
+        with patch.object(BaiduSearchProvider, "_client", create=True):
+            provider = service._provider
+            with patch.object(provider._client, "post", new_callable=AsyncMock, return_value=api_response):
+                results = await service.search("政策")
 
         assert len(results) == 1
         assert results[0].title == "政策文件"

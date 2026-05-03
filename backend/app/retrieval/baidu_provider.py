@@ -3,33 +3,22 @@ from __future__ import annotations
 import logging
 
 import httpx
-from selectolax.parser import HTMLParser
 
 from app.models.search import OnlineSearchItem
 from app.retrieval.online_search import BaseOnlineSearchProvider
 
 logger = logging.getLogger(__name__)
 
-_BAIDU_SEARCH_URL = "https://www.baidu.com/s"
+_BAIDU_SEARCH_API = "https://qianfan.baidubce.com/v2/ai_search/web_search"
 
 
 class BaiduSearchProvider(BaseOnlineSearchProvider):
-    """Online search provider using Baidu search engine."""
+    """Online search provider using Baidu Qianfan Search API."""
 
-    def __init__(self) -> None:
-        self._client = httpx.AsyncClient(
-            timeout=10,
-            follow_redirects=True,
-            headers={
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-                "Accept-Language": "zh-CN,zh;q=0.9",
-            },
-        )
-
-    async def _fetch_html(self, query: str) -> str:
-        response = await self._client.get(_BAIDU_SEARCH_URL, params={"wd": query, "rn": "10"})
-        response.raise_for_status()
-        return response.text
+    def __init__(self, api_key: str = "", base_url: str = "") -> None:
+        self._api_key = api_key
+        self._api_url = base_url or _BAIDU_SEARCH_API
+        self._client = httpx.AsyncClient(timeout=15)
 
     async def search(
         self,
@@ -37,41 +26,40 @@ class BaiduSearchProvider(BaseOnlineSearchProvider):
         max_results: int = 3,
         domains: list[str] | None = None,
     ) -> list[OnlineSearchItem]:
-        search_query = query
-        if domains:
-            site_filter = " OR ".join(f"site:{d}" for d in domains)
-            search_query = f"{query} {site_filter}"
-
-        try:
-            html = await self._fetch_html(search_query)
-        except Exception:
-            logger.warning("百度搜索请求失败", exc_info=True)
+        if not self._api_key:
+            logger.warning("百度搜索 API Key 未配置")
             return []
 
-        return _parse_baidu_html(html)[:max_results]
+        body: dict = {
+            "messages": [{"content": query[:72], "role": "user"}],
+            "search_source": "baidu_search_v2",
+            "resource_type_filter": [{"type": "web", "top_k": max_results}],
+        }
+        if domains:
+            body.setdefault("search_filter", {}).setdefault("match", {})["site"] = domains
 
+        headers = {
+            "X-Appbuilder-Authorization": f"Bearer {self._api_key}",
+            "Content-Type": "application/json",
+        }
+        try:
+            resp = await self._client.post(self._api_url, json=body, headers=headers)
+            resp.raise_for_status()
+        except Exception:
+            logger.warning("百度搜索 API 请求失败", exc_info=True)
+            return []
 
-def _parse_baidu_html(html: str) -> list[OnlineSearchItem]:
-    tree = HTMLParser(html)
-    results: list[OnlineSearchItem] = []
+        data = resp.json()
+        if "code" in data:
+            logger.warning("百度搜索 API 错误: code=%s message=%s", data.get("code"), data.get("message"))
+            return []
 
-    for container in tree.css("div.result.c-container"):
-        link = container.css_first("h3 a")
-        if not link:
-            continue
-        title = link.text(strip=True)
-        href = link.attributes.get("href", "")
-
-        snippet = ""
-        snippet_el = container.css_first("span.content-right_8Zs40")
-        if snippet_el:
-            snippet = snippet_el.text(strip=True)
-        if not snippet:
-            snippet_el = container.css_first("div.c-abstract")
-            if snippet_el:
-                snippet = snippet_el.text(strip=True)
-
-        if title and href:
-            results.append(OnlineSearchItem(title=title, snippet=snippet, url=href))
-
-    return results
+        references = data.get("references") or []
+        results: list[OnlineSearchItem] = []
+        for ref in references[:max_results]:
+            results.append(OnlineSearchItem(
+                title=ref.get("title", ""),
+                snippet=ref.get("snippet") or ref.get("content", ""),
+                url=ref.get("url", ""),
+            ))
+        return results

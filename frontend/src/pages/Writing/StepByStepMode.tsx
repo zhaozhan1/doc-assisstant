@@ -8,6 +8,101 @@ import Markdown from "react-markdown";
 import { useWritingStore } from "../../stores/useWritingStore";
 import { search } from "../../api/search";
 import { downloadFile } from "../../api/files";
+import type { UnifiedSearchResult } from "../../types/api";
+
+function SearchResultList({
+  results,
+  selectedRefs,
+  onToggle,
+}: {
+  results: UnifiedSearchResult[];
+  selectedRefs: string[];
+  onToggle: (title: string) => void;
+}) {
+  const localResults = results.filter((r) => r.source_type === "local");
+  const onlineResults = results.filter((r) => r.source_type === "online");
+  return (
+    <div style={{ flex: 1, overflow: "auto", marginBottom: 12 }}>
+      {localResults.length > 0 && (
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4, paddingLeft: 4 }}>
+            <Tag color="blue" style={{ margin: 0 }}>本地知识库</Tag>
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>{localResults.length} 条</Typography.Text>
+          </div>
+          {localResults.map((result, idx) => (
+            <SearchResultItem key={`local-${idx}`} result={result} selectedRefs={selectedRefs} onToggle={onToggle} />
+          ))}
+        </div>
+      )}
+      {onlineResults.length > 0 && (
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4, paddingLeft: 4 }}>
+            <Tag color="green" style={{ margin: 0 }}>在线搜索</Tag>
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>{onlineResults.length} 条</Typography.Text>
+          </div>
+          {onlineResults.map((result, idx) => (
+            <SearchResultItem key={`online-${idx}`} result={result} selectedRefs={selectedRefs} onToggle={onToggle} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SearchResultItem({
+  result,
+  selectedRefs,
+  onToggle,
+}: {
+  result: UnifiedSearchResult;
+  selectedRefs: string[];
+  onToggle: (title: string) => void;
+}) {
+  const isSelected = selectedRefs.includes(result.title);
+  return (
+    <div
+      style={{
+        padding: "8px 12px",
+        marginBottom: 4,
+        borderRadius: 6,
+        background: isSelected ? "#e6f4ff" : "#fafafa",
+        cursor: "pointer",
+      }}
+      onClick={() => onToggle(result.title)}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <Checkbox checked={isSelected} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Typography.Text
+            strong
+            ellipsis
+            style={{ fontSize: 13, display: "block" }}
+          >
+            {result.title}
+          </Typography.Text>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <Typography.Text
+              type="secondary"
+              style={{ fontSize: 12 }}
+            >
+              {(result.score * 100).toFixed(0)}%
+            </Typography.Text>
+            {result.source_type === "online" && typeof result.metadata?.url === "string" && (
+              <Typography.Link
+                href={result.metadata.url as string}
+                target="_blank"
+                style={{ fontSize: 11 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                来源
+              </Typography.Link>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function StepByStepMode() {
   const content = useWritingStore((s) => s.content);
@@ -187,68 +282,7 @@ export function StepByStepMode() {
           </div>
         )}
 
-        {searchResults.length > 0 && (
-          <div
-            style={{
-              flex: 1,
-              overflow: "auto",
-              marginBottom: 12,
-            }}
-          >
-            {searchResults.map((result, idx) => (
-              <div
-                key={idx}
-                style={{
-                  padding: "8px 12px",
-                  marginBottom: 4,
-                  borderRadius: 6,
-                  background: selectedRefs.includes(result.title)
-                    ? "#e6f4ff"
-                    : "#fafafa",
-                  cursor: "pointer",
-                }}
-                onClick={() => handleToggleRef(result.title)}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
-                  <Checkbox
-                    checked={selectedRefs.includes(result.title)}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <Typography.Text strong>
-                      {result.title}
-                    </Typography.Text>
-                    <div>
-                      <Tag
-                        color={
-                          result.source_type === "local"
-                            ? "blue"
-                            : "green"
-                        }
-                        style={{ marginRight: 4 }}
-                      >
-                        {result.source_type === "local"
-                          ? "本地"
-                          : "在线"}
-                      </Tag>
-                      <Typography.Text
-                        type="secondary"
-                        style={{ fontSize: 12 }}
-                      >
-                        {(result.score * 100).toFixed(0)}%
-                      </Typography.Text>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {searchResults.length > 0 && <SearchResultList results={searchResults} selectedRefs={selectedRefs} onToggle={handleToggleRef} />}
 
         <Typography.Title
           level={5}

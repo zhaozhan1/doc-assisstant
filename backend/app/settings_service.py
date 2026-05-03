@@ -28,6 +28,10 @@ class SettingsService:
 
     def update_online_search_config(self, update: OnlineSearchConfigUpdate) -> OnlineSearchConfig:
         update_data = update.model_dump(exclude_none=True)
+        # 前端密码掩码回传，跳过以保留真实值
+        for masked_field in ("api_key", "base_url"):
+            if update_data.get(masked_field) == "********":
+                del update_data[masked_field]
         self._config.online_search = self._config.online_search.model_copy(update=update_data)
         self._write_config()
         return self._config.online_search
@@ -38,11 +42,18 @@ class SettingsService:
             if provider == "baidu":
                 from app.retrieval.baidu_provider import BaiduSearchProvider
 
-                prov = BaiduSearchProvider()
-                results = await prov.search("测试", max_results=1)
+                api_key = config.api_key or self._config.online_search.api_key
+                base_url = config.base_url or self._config.online_search.base_url
+                prov = BaiduSearchProvider(api_key=api_key, base_url=base_url)
+                results = await prov.search("公文", max_results=3)
+                if results:
+                    return ConnectionTestResult(
+                        success=True,
+                        message=f"连接成功，返回 {len(results)} 条结果",
+                    )
                 return ConnectionTestResult(
-                    success=True,
-                    message=f"连接成功，返回 {len(results)} 条结果",
+                    success=False,
+                    message="连接成功但未返回搜索结果，可能被限制访问",
                 )
             return ConnectionTestResult(
                 success=False,
