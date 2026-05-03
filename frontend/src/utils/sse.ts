@@ -1,10 +1,14 @@
+export type SSEEvent =
+  | { type: "token"; value: string }
+  | { type: "output_path"; value: string };
+
 /**
- * Shared SSE stream parser. Yields decoded token strings from a server-sent
+ * Shared SSE stream parser. Yields decoded events from a server-sent
  * events stream delivered via a Fetch ReadableStream.
  */
 export async function* parseSSEStream(
   reader: ReadableStreamDefaultReader<Uint8Array>,
-): AsyncGenerator<string, void, unknown> {
+): AsyncGenerator<SSEEvent, void, unknown> {
   const decoder = new TextDecoder();
   let buffer = "";
 
@@ -23,8 +27,10 @@ export async function* parseSSEStream(
         const payload = line.slice(6).trim();
         if (payload === "[DONE]") return;
         try {
-          const parsed = JSON.parse(payload) as { token: string };
-          if (parsed.token) yield parsed.token;
+          const parsed = JSON.parse(payload) as Record<string, string>;
+          if (parsed.token) yield { type: "token", value: parsed.token };
+          if (parsed.output_path)
+            yield { type: "output_path", value: parsed.output_path };
         } catch {
           /* skip malformed lines */
         }

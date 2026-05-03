@@ -14,7 +14,7 @@ cd backend
 pip install -e ".[dev]"          # 安装依赖
 ruff check app/ tests/           # Lint
 ruff format --check app/ tests/  # 格式检查
-pytest                           # 测试
+pytest -n 10                     # 测试（10 路并行）
 pytest --cov=app                 # 覆盖率
 uvicorn app.main:app --reload --port 8000  # 启动
 
