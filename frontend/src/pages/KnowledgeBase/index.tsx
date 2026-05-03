@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { useEffect, useState, useCallback, useRef } from "react";
 import {
   Card,
@@ -32,7 +33,7 @@ const TAG_COLOR_MAP: Record<string, string> = {
 const DOC_TYPE_OPTIONS = ["通知", "报告", "方案", "其他"];
 
 const SORT_OPTIONS: { label: string; value: string }[] = [
-  { label: "最近更新", value: "doc_date_desc" },
+  { label: "最近入库", value: "import_date_desc" },
   { label: "文件名", value: "file_name_asc" },
   { label: "分块数 ↓", value: "chunk_count_desc" },
 ];
@@ -41,8 +42,8 @@ const SORT_MAP: Record<
   string,
   { sort_by: FileListParams["sort_by"]; sort_order: "asc" | "desc" }
 > = {
-  doc_date_desc: { sort_by: "doc_date", sort_order: "desc" },
-  doc_date_asc: { sort_by: "doc_date", sort_order: "asc" },
+  import_date_desc: { sort_by: "import_date", sort_order: "desc" },
+  import_date_asc: { sort_by: "import_date", sort_order: "asc" },
   file_name_asc: { sort_by: "file_name", sort_order: "asc" },
   file_name_desc: { sort_by: "file_name", sort_order: "desc" },
   chunk_count_desc: { sort_by: "chunk_count", sort_order: "desc" },
@@ -57,7 +58,7 @@ export default function KnowledgeBase() {
   const [dateRange, setDateRange] = useState<[string, string] | undefined>(
     undefined,
   );
-  const [sortValue, setSortValue] = useState("doc_date_desc");
+  const [sortValue, setSortValue] = useState("import_date_desc");
   const submittedRef = useRef<Set<string>>(new Set());
 
   const getFileKey = (f: File) => `${f.name}:${f.size}:${f.lastModified}`;
@@ -173,11 +174,18 @@ export default function KnowledgeBase() {
       ),
     },
     {
-      title: "日期",
-      dataIndex: "doc_date",
-      key: "doc_date",
-      width: 120,
-      render: (date: string | null) => date || "-",
+      title: "创建日期",
+      dataIndex: "created_date",
+      key: "created_date",
+      width: 110,
+      render: (date: string | null) => (date ? dayjs(date).format("YYYY-MM-DD") : "-"),
+    },
+    {
+      title: "入库日期",
+      dataIndex: "import_date",
+      key: "import_date",
+      width: 110,
+      render: (date: string | null) => (date ? dayjs(date).format("YYYY-MM-DD") : "-"),
     },
     {
       title: "分块数",
