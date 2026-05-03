@@ -18,7 +18,7 @@ import {
   CheckCircleOutlined,
 } from "@ant-design/icons";
 import { useWritingStore } from "../../stores/useWritingStore";
-import { listFiles, uploadFiles, downloadFile } from "../../api/files";
+import { listFiles, uploadFiles } from "../../api/files";
 import type { IndexedFile, PptxRequest } from "../../types/api";
 import SlideThumbnail from "./components/SlideThumbnail";
 import GenerationSteps from "./components/GenerationSteps";
@@ -586,11 +586,8 @@ export function WordToPptMode() {
                 type="primary"
                 icon={<DownloadOutlined />}
                 onClick={() => {
-                  if (pptxResult.output_path) {
-                    window.open(
-                      downloadFile(pptxResult.output_path),
-                      "_blank",
-                    );
+                  if (pptxResult.download_url) {
+                    window.open(pptxResult.download_url, "_blank");
                   } else {
                     message.info("暂无可下载文件");
                   }

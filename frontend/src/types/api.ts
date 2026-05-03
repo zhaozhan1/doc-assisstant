@@ -195,5 +195,6 @@ export interface PptxResult {
   slides: SlideContent[];
   source_doc: string;
   duration_ms: number;
+  download_url: string | null;
   error: string | null;
 }
