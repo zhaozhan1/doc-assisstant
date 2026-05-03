@@ -29,6 +29,12 @@ class OpenAICompatibleConfig(BaseModel):
     chat_model: str = "qwen3"
     embed_model: str = "bge-m3"
 
+    @model_validator(mode="after")
+    def _resolve_api_key(self) -> OpenAICompatibleConfig:
+        if not self.api_key:
+            self.api_key = os.environ.get("OPENAI_API_KEY", "")
+        return self
+
 
 class ClaudeConfig(BaseModel):
     base_url: str = "https://api.anthropic.com"
