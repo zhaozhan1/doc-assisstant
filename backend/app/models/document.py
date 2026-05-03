@@ -35,3 +35,4 @@ class DocumentMetadata:
     doc_date: datetime | None = None
     doc_type: str = ""
     file_md5: str = ""
+    file_created_time: datetime | None = None
