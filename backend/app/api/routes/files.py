@@ -120,8 +120,6 @@ async def upload_files(
         raise HTTPException(status_code=422, detail="未提供有效文件")
 
     task_id = await task_manager.start_import(paths)
-    # Ingester copies files, so temp dir can be cleaned up after task starts
-    shutil.rmtree(upload_dir, ignore_errors=True)
     return {"task_id": task_id}
 
 
