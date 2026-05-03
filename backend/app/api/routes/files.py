@@ -85,8 +85,9 @@ _ZIP_MAGIC = b"PK\x03\x04"
 def _validate_file_type(filename: str, content: bytes) -> str | None:
     """Return an error message if file type is invalid, or None if OK."""
     ext = Path(filename).suffix.lower()
-    if ext in (".docx", ".doc") and content[:4] != _ZIP_MAGIC:
-        return f"文件格式不匹配: {filename} 不是有效的 Word 文档"
+    # .docx/.xlsx/.pptx are ZIP-based; .doc/.xls/.ppt are OLE2-based
+    if ext in (".docx", ".xlsx", ".pptx") and content[:4] != _ZIP_MAGIC:
+        return f"文件格式不匹配: {filename} 不是有效的文件"
     return None
 
 
