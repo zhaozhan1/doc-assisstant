@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from app.api.deps import get_config, get_settings_service
 from app.config import AppConfig, OnlineSearchConfig
@@ -77,10 +77,18 @@ async def get_llm_config(service: SettingsService = _settings_dep) -> dict:
 
 @router.put("/llm")
 async def update_llm_config(
+    request: Request,
     update: LLMSettingsUpdate,
     service: SettingsService = _settings_dep,
 ) -> dict:
-    return service.update_llm_config(update)
+    result = service.update_llm_config(update)
+    # Recreate LLM providers with updated config
+    config = service._config
+    from app.llm.factory import create_embed_provider, create_provider
+
+    request.app.state.llm = create_provider(config.llm)
+    request.app.state.embed_llm = create_embed_provider(config.llm)
+    return result
 
 
 # ── Generation Settings ──────────────────────────────────────

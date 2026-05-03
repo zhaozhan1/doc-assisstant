@@ -69,7 +69,13 @@ export default function Settings() {
   }, [kb, kbForm]);
 
   useEffect(() => {
-    if (llm) llmForm.setFieldsValue(llm);
+    if (llm) {
+      // Don't fill masked API keys — use placeholder instead
+      const cleaned = { ...llm };
+      if (cleaned.openai_api_key === "********") cleaned.openai_api_key = "";
+      if (cleaned.claude_api_key === "********") cleaned.claude_api_key = "";
+      llmForm.setFieldsValue(cleaned);
+    }
   }, [llm, llmForm]);
 
   useEffect(() => {
@@ -236,7 +242,7 @@ export default function Settings() {
                       <Input />
                     </Form.Item>
                     <Form.Item label="API Key" name="openai_api_key">
-                      <Input.Password />
+                      <Input.Password placeholder="已保存，留空则不修改" />
                     </Form.Item>
                     <Form.Item label="Chat Model" name="openai_chat_model">
                       <Input />
@@ -263,7 +269,7 @@ export default function Settings() {
                       <Input />
                     </Form.Item>
                     <Form.Item label="API Key" name="claude_api_key">
-                      <Input.Password />
+                      <Input.Password placeholder="已保存，留空则不修改" />
                     </Form.Item>
                     <Form.Item label="Chat Model" name="claude_chat_model">
                       <Input />
@@ -330,7 +336,7 @@ export default function Settings() {
             />
           </Form.Item>
           <Form.Item label="API Key" name="api_key">
-            <Input.Password />
+            <Input.Password placeholder="已保存，留空则不修改" />
           </Form.Item>
           <Form.Item label="Base URL" name="base_url">
             <Input />
