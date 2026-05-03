@@ -99,9 +99,7 @@ async def test_list_files_filters_by_import_date_range(svc: FileService, mock_vs
         _chunk("/data/b.docx", "b.docx", "批复", "md5_b", import_time="2025-06-15T00:00:00"),
     ]
 
-    result = await svc.list_files(
-        FileListRequest(date_from=date(2025, 6, 1), date_to=date(2025, 6, 30))
-    )
+    result = await svc.list_files(FileListRequest(date_from=date(2025, 6, 1), date_to=date(2025, 6, 30)))
 
     assert len(result) == 1
     assert result[0].source_file == "/data/b.docx"

@@ -25,25 +25,25 @@ def client(tmp_path, monkeypatch):
             source_file="/data/a.docx",
             file_name="a.docx",
             doc_type="通知",
-            doc_date="2025-03-10",
             file_md5="aaa",
             chunk_count=3,
+            import_date="2025-03-10T00:00:00",
         ),
         IndexedFile(
             source_file="/data/b.docx",
             file_name="b.docx",
             doc_type="请示",
-            doc_date="2025-04-20",
             file_md5="bbb",
             chunk_count=2,
+            import_date="2025-04-20T00:00:00",
         ),
         IndexedFile(
             source_file="/data/c.docx",
             file_name="c.docx",
             doc_type="通知",
-            doc_date=None,
             file_md5="ccc",
             chunk_count=1,
+            import_date=None,
         ),
     ]
 
@@ -72,7 +72,7 @@ def test_stats_counts_and_distribution(client):
 def test_stats_last_updated_picks_max_date(client):
     resp = client.get("/api/stats")
     data = resp.json()
-    assert data["last_updated"] == "2025-04-20"
+    assert data["last_updated"] == "2025-04-20T00:00:00"
 
 
 def test_stats_empty_knowledge_base(tmp_path, monkeypatch):

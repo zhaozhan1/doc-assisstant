@@ -107,7 +107,9 @@ class TestMetadataExtractor:
         assert meta.file_created_time is not None
         assert isinstance(meta.file_created_time, datetime)
 
-    def test_file_created_time_none_for_missing_file(self, metadata_extractor: MetadataExtractor, tmp_path: Path) -> None:
+    def test_file_created_time_none_for_missing_file(
+        self, metadata_extractor: MetadataExtractor, tmp_path: Path
+    ) -> None:
         gone = tmp_path / "gone.txt"
         result = metadata_extractor._get_file_created_time(gone)
         assert result is None
