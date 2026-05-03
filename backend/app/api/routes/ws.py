@@ -12,18 +12,16 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["websocket"])
 
-_ALLOWED_ORIGINS = frozenset(
-    {
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-    }
-)
-
 
 def _validate_origin(websocket: WebSocket) -> bool:
     origin = websocket.headers.get("origin", "")
-    return origin in _ALLOWED_ORIGINS or not origin
+    if not origin:
+        return True
+    try:
+        allowed = websocket.app.state.config.server.cors_origins
+    except AttributeError:
+        allowed = []
+    return origin in allowed
 
 
 @router.websocket("/ws/tasks/{task_id}")

@@ -18,13 +18,18 @@ const mockKB: KBSettings = {
 };
 
 const mockLLM: LLMSettings = {
-  default_provider: "ollama",
+  default_provider: "openai",
+  embed_provider: "openai",
   ollama_base_url: "http://localhost:11434",
   ollama_chat_model: "qwen2.5",
   ollama_embed_model: "bge-large-zh-v1.5",
   claude_base_url: "https://api.anthropic.com",
   claude_api_key: "sk-test-secret-key",
   claude_chat_model: "claude-sonnet-4-20250514",
+  openai_base_url: "http://127.0.0.1:18008/v1",
+  openai_api_key: "test-key",
+  openai_chat_model: "Qwen3.6-35B-A3B-MLX-8bit",
+  openai_embed_model: "bge-m3-mlx-fp16",
 };
 
 const mockGeneration: GenerationSettings = {
@@ -36,7 +41,7 @@ const mockGeneration: GenerationSettings = {
 
 const mockOnlineSearch: OnlineSearchConfig = {
   enabled: true,
-  provider: "bing",
+  provider: "baidu",
   api_key: "search-api-key",
   base_url: "https://api.bing.microsoft.com",
   domains: ["gov.cn", "example.com"],
@@ -124,20 +129,19 @@ describe("Settings Page", () => {
     expect(saveButton).toBeInTheDocument();
   });
 
-  it("renders LLM config form fields with masked API key", async () => {
+  it("renders LLM config form with conditional fields for selected provider", async () => {
     const user = userEvent.setup();
     render(<Settings />);
 
-    // Switch to LLM tab
     await user.click(screen.getByText("LLM"));
 
-    expect(screen.getByText("默认提供商")).toBeInTheDocument();
-    expect(screen.getByText("Ollama Base URL")).toBeInTheDocument();
-    expect(screen.getByText("Ollama Chat Model")).toBeInTheDocument();
-    expect(screen.getByText("Ollama Embed Model")).toBeInTheDocument();
-    expect(screen.getByText("Claude Base URL")).toBeInTheDocument();
-    expect(screen.getByText("Claude API Key")).toBeInTheDocument();
-    expect(screen.getByText("Claude Chat Model")).toBeInTheDocument();
+    expect(screen.getByText("聊天提供商")).toBeInTheDocument();
+    expect(screen.getByText("Embedding 提供商")).toBeInTheDocument();
+
+    // Default provider is "openai", so OpenAI fields should be visible
+    expect(screen.getByText("Chat Model")).toBeInTheDocument();
+    expect(screen.getByText("Base URL")).toBeInTheDocument();
+    expect(screen.getByText("API Key")).toBeInTheDocument();
   });
 
   it("renders Online Search config with Switch and test connection button", async () => {
@@ -192,7 +196,7 @@ describe("Settings Page", () => {
     await user.click(screen.getByText("LLM"));
     // Wait for tab panel to render
     await waitFor(() => {
-      expect(screen.getByText("默认提供商")).toBeInTheDocument();
+      expect(screen.getByText("聊天提供商")).toBeInTheDocument();
     });
     // Multiple "保存" buttons may exist; use getAllBy and click the visible one
     const saveBtns = screen.getAllByText((content) =>

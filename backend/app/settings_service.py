@@ -13,6 +13,7 @@ from app.models.search import (
     LLMSettingsUpdate,
     OnlineSearchConfigUpdate,
 )
+from app.paths import resolve_path
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 class SettingsService:
     def __init__(self, config: AppConfig, config_path: Path | str = "config.yaml") -> None:
         self._config = config
-        self._config_path = Path(config_path)
+        self._config_path = Path(resolve_path(str(config_path)))
 
     def get_online_search_config(self) -> OnlineSearchConfig:
         return self._config.online_search
@@ -68,19 +69,19 @@ class SettingsService:
     # ── LLM ─────────────────────────────────────────────────────
 
     def get_llm_config(self) -> dict:
-        """Return LLM config dict with api_key masked."""
+        """Return LLM config dict with api_key masked, providers flattened."""
         llm = self._config.llm
-        providers: dict = {}
+        result: dict = {
+            "default_provider": llm.default_provider,
+            "embed_provider": llm.embed_provider,
+        }
         for name, prov in llm.providers.items():
             prov_data = prov.model_dump()
             if prov_data.get("api_key"):
                 prov_data["api_key"] = "********"
-            providers[name] = prov_data
-        return {
-            "default_provider": llm.default_provider,
-            "embed_provider": llm.embed_provider,
-            "providers": providers,
-        }
+            for field, value in prov_data.items():
+                result[f"{name}_{field}"] = value
+        return result
 
     def update_llm_config(self, update: LLMSettingsUpdate) -> dict:
         """Update LLM config, mapping flat field names to nested provider configs."""
@@ -89,24 +90,30 @@ class SettingsService:
 
         if "default_provider" in update_data:
             llm.default_provider = update_data.pop("default_provider")
+        if "embed_provider" in update_data:
+            llm.embed_provider = update_data.pop("embed_provider")
 
         # Map flattened provider fields to nested config
         provider_fields: dict[str, dict[str, str]] = {}
         for flat_key, value in update_data.items():
-            if flat_key.startswith("ollama_"):
-                provider_fields.setdefault("ollama", {})[flat_key.removeprefix("ollama_")] = value
-            elif flat_key.startswith("claude_"):
-                provider_fields.setdefault("claude", {})[flat_key.removeprefix("claude_")] = value
+            for prefix in ("ollama", "claude", "openai"):
+                if flat_key.startswith(f"{prefix}_"):
+                    # Skip empty api_key — frontend sends "" for unchanged passwords
+                    if flat_key.endswith("_api_key") and value == "":
+                        break
+                    provider_fields.setdefault(prefix, {})[flat_key.removeprefix(f"{prefix}_")] = value
+                    break
 
-        from app.config import ClaudeConfig, OllamaConfig
+        from app.config import ClaudeConfig, OllamaConfig, OpenAICompatibleConfig
 
+        provider_defaults = {
+            "ollama": OllamaConfig,
+            "claude": ClaudeConfig,
+            "openai": OpenAICompatibleConfig,
+        }
         for provider_name, fields in provider_fields.items():
             if provider_name not in llm.providers:
-                if provider_name == "ollama":
-                    llm.providers[provider_name] = OllamaConfig()
-                elif provider_name == "claude":
-                    llm.providers[provider_name] = ClaudeConfig()
-            # Use model_copy to re-run Pydantic validation
+                llm.providers[provider_name] = provider_defaults[provider_name]()
             llm.providers[provider_name] = llm.providers[provider_name].model_copy(update=fields)
 
         self._write_config()

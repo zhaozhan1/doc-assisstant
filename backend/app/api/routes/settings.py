@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from app.api.deps import get_config, get_settings_service
 from app.config import AppConfig, OnlineSearchConfig
@@ -77,10 +77,38 @@ async def get_llm_config(service: SettingsService = _settings_dep) -> dict:
 
 @router.put("/llm")
 async def update_llm_config(
+    request: Request,
     update: LLMSettingsUpdate,
     service: SettingsService = _settings_dep,
 ) -> dict:
-    return service.update_llm_config(update)
+    result = service.update_llm_config(update)
+    # Recreate LLM providers with updated config
+    config = service._config
+    from app.llm.factory import create_embed_provider, create_provider
+
+    llm = create_provider(config.llm)
+    embed_llm = create_embed_provider(config.llm)
+
+    request.app.state.llm = llm
+    request.app.state.embed_llm = embed_llm
+
+    # Update all services that hold stale LLM references
+    state = request.app.state
+    if hasattr(state, "writer_service"):
+        state.writer_service._intent_parser._llm = llm
+        state.writer_service._writer._llm = llm
+    if hasattr(state, "pptx_generator"):
+        state.pptx_generator._llm = llm
+    if hasattr(state, "ingester"):
+        state.ingester.classifier._llm = llm
+    if hasattr(state, "retriever"):
+        if state.retriever._query_rewriter is not None:
+            state.retriever._query_rewriter._llm = llm
+        state.retriever._local._llm = embed_llm
+    if hasattr(state, "vector_store"):
+        state.vector_store._llm = embed_llm
+
+    return result
 
 
 # ── Generation Settings ──────────────────────────────────────

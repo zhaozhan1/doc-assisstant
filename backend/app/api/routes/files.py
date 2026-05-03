@@ -85,8 +85,9 @@ _ZIP_MAGIC = b"PK\x03\x04"
 def _validate_file_type(filename: str, content: bytes) -> str | None:
     """Return an error message if file type is invalid, or None if OK."""
     ext = Path(filename).suffix.lower()
-    if ext in (".docx", ".doc") and content[:4] != _ZIP_MAGIC:
-        return f"文件格式不匹配: {filename} 不是有效的 Word 文档"
+    # .docx/.xlsx/.pptx are ZIP-based; .doc/.xls/.ppt are OLE2-based
+    if ext in (".docx", ".xlsx", ".pptx") and content[:4] != _ZIP_MAGIC:
+        return f"文件格式不匹配: {filename} 不是有效的文件"
     return None
 
 
@@ -120,8 +121,6 @@ async def upload_files(
         raise HTTPException(status_code=422, detail="未提供有效文件")
 
     task_id = await task_manager.start_import(paths)
-    # Ingester copies files, so temp dir can be cleaned up after task starts
-    shutil.rmtree(upload_dir, ignore_errors=True)
     return {"task_id": task_id}
 
 

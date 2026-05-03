@@ -21,6 +21,7 @@ from app.generation.writer import Writer
 from app.generation.writer_service import WriterService
 from app.ingestion.ingester import Ingester
 from app.llm.factory import create_embed_provider, create_provider
+from app.paths import resolve_path
 from app.retrieval.file_service import FileService
 from app.retrieval.fusion import Fusion
 from app.retrieval.local_search import LocalSearch
@@ -50,6 +51,7 @@ def setup_logging(config: LoggingConfig, *, _force: bool = False) -> None:
             structlog.stdlib.add_log_level,
             structlog.stdlib.add_logger_name,
             structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.format_exc_info,
         ]
 
         console_handler = logging.StreamHandler()
@@ -100,10 +102,31 @@ def setup_logging(config: LoggingConfig, *, _force: bool = False) -> None:
     )
 
 
+def _find_frontend_dir() -> Path | None:
+    import sys
+
+    if getattr(sys, "frozen", False):
+        candidate = Path(sys._MEIPASS) / "frontend"
+    else:
+        candidate = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+    return candidate if (candidate / "index.html").exists() else None
+
+
 def create_app() -> FastAPI:
-    config = AppConfig()
+    config = AppConfig(_yaml_file=resolve_path("config.yaml"))
+    if config.knowledge_base.source_folder:
+        config.knowledge_base.source_folder = resolve_path(config.knowledge_base.source_folder)
+    config.knowledge_base.db_path = resolve_path(config.knowledge_base.db_path)
+    config.knowledge_base.metadata_path = resolve_path(config.knowledge_base.metadata_path)
+    config.logging.file = resolve_path(config.logging.file)
+    config.generation.save_path = resolve_path(config.generation.save_path)
     setup_logging(config.logging)
     logger.info("应用启动")
+    provider_cfg = config.llm.providers.get(config.llm.default_provider)
+    logger.info("配置加载: provider=%s, api_key_set=%s, base_url=%s",
+                config.llm.default_provider,
+                bool(getattr(provider_cfg, "api_key", "")),
+                getattr(provider_cfg, "base_url", ""))
 
     @asynccontextmanager
     async def _lifespan(app: FastAPI):
@@ -180,6 +203,29 @@ def create_app() -> FastAPI:
     app.include_router(templates.router)
     app.include_router(stats.router)
     app.include_router(ws.router)
+
+    # Serve frontend static files (for bundled app deployment)
+    frontend_dir = _find_frontend_dir()
+    if frontend_dir is not None:
+        from fastapi.responses import FileResponse, JSONResponse
+        from fastapi.staticfiles import StaticFiles
+
+        app.mount("/assets", StaticFiles(directory=frontend_dir / "assets"), name="static_assets")
+
+        _API_PREFIXES = ("api/", "ws/", "health")
+
+        @app.get("/")
+        async def serve_index():
+            return FileResponse(frontend_dir / "index.html")
+
+        @app.get("/{filename:path}")
+        async def spa_fallback(filename: str):
+            if filename.startswith(_API_PREFIXES):
+                return JSONResponse(status_code=404, content={"detail": "Not Found"})
+            file_path = frontend_dir / filename
+            if file_path.is_file():
+                return FileResponse(file_path)
+            return FileResponse(frontend_dir / "index.html")
 
     return app
 

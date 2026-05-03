@@ -10,6 +10,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from app.models.task import FileResult, TaskProgress, TaskStatus
+from app.paths import resolve_path
 
 logger = logging.getLogger(__name__)
 
@@ -136,14 +137,14 @@ class TaskManager:
         return self._tasks[task_id]
 
     def _save_task(self, task: TaskProgress) -> None:
-        path = Path(self.TASKS_DIR) / f"{task.task_id}.json"
+        path = Path(resolve_path(self.TASKS_DIR)) / f"{task.task_id}.json"
         path.parent.mkdir(parents=True, exist_ok=True)
         data = asdict(task)
         data["status"] = task.status.value
         path.write_text(json.dumps(data, ensure_ascii=False, indent=2, default=str))
 
     def _load_tasks(self) -> None:
-        tasks_dir = Path(self.TASKS_DIR)
+        tasks_dir = Path(resolve_path(self.TASKS_DIR))
         if not tasks_dir.exists():
             return
         for f in tasks_dir.glob("*.json"):

@@ -85,12 +85,17 @@ class KBSettingsUpdate(BaseModel):
 
 class LLMSettingsUpdate(BaseModel):
     default_provider: str | None = None
+    embed_provider: str | None = None
     ollama_base_url: str | None = None
     ollama_chat_model: str | None = None
     ollama_embed_model: str | None = None
     claude_base_url: str | None = None
     claude_api_key: str | None = None
     claude_chat_model: str | None = None
+    openai_base_url: str | None = None
+    openai_api_key: str | None = None
+    openai_chat_model: str | None = None
+    openai_embed_model: str | None = None
 
 
 class GenerationSettingsUpdate(BaseModel):

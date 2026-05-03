@@ -9,10 +9,13 @@ from app.llm.base import BaseLLMProvider
 
 class OpenAIProvider(BaseLLMProvider):
     def __init__(self, base_url: str, api_key: str, chat_model: str, embed_model: str) -> None:
+        headers: dict[str, str] = {}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
         self._client = httpx.AsyncClient(
             base_url=base_url,
             timeout=120.0,
-            headers={"Authorization": f"Bearer {api_key}"},
+            headers=headers,
         )
         self._chat_model = chat_model
         self._embed_model = embed_model
@@ -35,7 +38,7 @@ class OpenAIProvider(BaseLLMProvider):
             async for line in resp.aiter_lines():
                 if not line or not line.startswith("data: "):
                     continue
-                payload = line[len("data: "):]
+                payload = line[len("data: ") :]
                 if payload == "[DONE]":
                     break
                 data = json.loads(payload)

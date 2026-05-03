@@ -41,7 +41,7 @@ logging:
         config_file.write_text("{}")
         config = AppConfig(_yaml_file=str(config_file))
         assert config.knowledge_base.chunk_size == 500
-        assert config.llm.default_provider == "ollama"
+        assert config.llm.default_provider == "openai"
         assert config.ocr.tesseract_cmd == ""
 
     def test_chunk_size_validation(self, tmp_path: Path) -> None:
@@ -97,7 +97,7 @@ llm:
         config_file = tmp_path / "config.yaml"
         config_file.write_text("{}")
         config = AppConfig(_yaml_file=str(config_file))
-        assert config.llm.default_provider == "ollama"
+        assert config.llm.default_provider == "openai"
 
 
 class TestEmbedProvider:
@@ -105,7 +105,7 @@ class TestEmbedProvider:
         config_file = tmp_path / "config.yaml"
         config_file.write_text("{}")
         config = AppConfig(_yaml_file=str(config_file))
-        assert config.llm.embed_provider == "ollama"
+        assert config.llm.embed_provider == "openai"
 
     def test_embed_provider_from_yaml(self, tmp_path: Path) -> None:
         config_file = tmp_path / "config.yaml"
@@ -123,7 +123,7 @@ class TestOnlineSearchConfig:
         config_file.write_text("{}")
         config = AppConfig(_yaml_file=str(config_file))
         assert config.online_search.enabled is False
-        assert config.online_search.provider == "tavily"
+        assert config.online_search.provider == "baidu"
         assert config.online_search.api_key == ""
         assert config.online_search.base_url == ""
         assert config.online_search.domains == ["gov.cn"]
@@ -162,7 +162,7 @@ class TestGenerationConfig:
 class TestServerConfig:
     def test_default_cors_origins(self) -> None:
         config = ServerConfig()
-        assert config.cors_origins == ["http://localhost:5173"]
+        assert config.cors_origins == ["http://127.0.0.1:8000"]
 
     def test_custom_cors_origins(self) -> None:
         config = ServerConfig(cors_origins=["https://example.com", "https://app.example.com"])
@@ -187,7 +187,7 @@ class TestServerConfig:
         config_file.write_text("{}")
         config = AppConfig(_yaml_file=str(config_file))
         assert isinstance(config.server, ServerConfig)
-        assert config.server.cors_origins == ["http://localhost:5173"]
+        assert config.server.cors_origins == ["http://127.0.0.1:8000"]
 
     def test_server_config_from_yaml(self, tmp_path: Path) -> None:
         config_file = tmp_path / "config.yaml"

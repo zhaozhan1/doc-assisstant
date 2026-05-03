@@ -49,10 +49,14 @@ class ClaudeConfig(BaseModel):
 
 
 class LLMConfig(BaseModel):
-    default_provider: Literal["ollama", "claude", "openai"] = "ollama"
-    embed_provider: Literal["ollama", "openai"] = "ollama"
+    default_provider: Literal["ollama", "claude", "openai"] = "openai"
+    embed_provider: Literal["ollama", "openai"] = "openai"
     providers: dict[str, OllamaConfig | ClaudeConfig | OpenAICompatibleConfig] = {
-        "ollama": OllamaConfig(),
+        "openai": OpenAICompatibleConfig(
+            base_url="http://127.0.0.1:18008/v1",
+            chat_model="Qwen3.6-35B-A3B-MLX-8bit",
+            embed_model="bge-m3-mlx-fp16",
+        ),
     }
 
 
@@ -67,7 +71,7 @@ class LoggingConfig(BaseModel):
 
 class OnlineSearchConfig(BaseModel):
     enabled: bool = False
-    provider: str = "tavily"
+    provider: str = "baidu"
     api_key: str = ""
     base_url: str = ""
     domains: list[str] = ["gov.cn"]
@@ -83,7 +87,7 @@ class GenerationConfig(BaseModel):
 
 
 class ServerConfig(BaseModel):
-    cors_origins: list[str] = ["http://localhost:5173"]
+    cors_origins: list[str] = ["http://127.0.0.1:8000"]
     host: str = "127.0.0.1"
     port: int = 8000
     workers: int = 1

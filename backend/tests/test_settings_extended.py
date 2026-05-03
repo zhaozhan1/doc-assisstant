@@ -56,18 +56,20 @@ def test_llm_config_get_masks_api_key(client: TestClient) -> None:
     assert resp.status_code == 200
     data = resp.json()
     assert "default_provider" in data
-    assert "providers" in data
-    assert data["providers"]["claude"]["api_key"] == "********"
+    assert "embed_provider" in data
+    # Flattened fields
+    assert data["claude_api_key"] == "********"
+    assert "claude_base_url" in data
 
 
 def test_llm_config_update(client: TestClient) -> None:
     resp = client.put(
         "/api/settings/llm",
-        json={"ollama_chat_model": "qwen2.5:7b"},
+        json={"openai_chat_model": "test-model"},
     )
     assert resp.status_code == 200
     data = resp.json()
-    assert data["providers"]["ollama"]["chat_model"] == "qwen2.5:7b"
+    assert data["openai_chat_model"] == "test-model"
 
 
 def test_generation_config_get(client: TestClient) -> None:
