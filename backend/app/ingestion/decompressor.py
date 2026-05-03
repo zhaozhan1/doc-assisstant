@@ -12,9 +12,12 @@ from app.models.document import FileInfo
 logger = logging.getLogger(__name__)
 
 SUPPORTED_FORMATS = {
+    ".doc",
     ".docx",
     ".pdf",
+    ".xls",
     ".xlsx",
+    ".ppt",
     ".pptx",
     ".png",
     ".jpg",

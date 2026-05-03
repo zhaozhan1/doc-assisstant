@@ -4,6 +4,9 @@ import logging
 from collections.abc import Callable
 from pathlib import Path
 
+import subprocess
+import tempfile
+
 import pytesseract
 from PIL import Image
 
@@ -18,9 +21,12 @@ class Extractor:
         if ocr_config.tesseract_cmd:
             pytesseract.pytesseract.tesseract_cmd = ocr_config.tesseract_cmd
         self._handlers: dict[str, Callable[[Path], ExtractedDoc]] = {
+            ".doc": self._extract_doc,
             ".docx": self._extract_docx,
             ".pdf": self._extract_pdf,
+            ".xls": self._extract_xls,
             ".xlsx": self._extract_xlsx,
+            ".ppt": self._extract_ppt,
             ".pptx": self._extract_pptx,
             ".png": self._extract_image,
             ".jpg": self._extract_image,
@@ -128,3 +134,58 @@ class Extractor:
         img = Image.open(path)
         text = pytesseract.image_to_string(img, lang="chi_sim")
         return ExtractedDoc(text=text, structure=[], source_path=path)
+
+    # ── Legacy binary formats (.doc, .xls, .ppt) ──────────────
+    # TODO: 当前 .doc/.ppt 依赖 macOS textutil 做格式转换。
+    # 若未来迁移到非 macOS 环境，需替换为纯 Python 库：
+    #   - xlrd 已是纯 Python（.xls）
+    #   - 候选方案：sharepoint-to-text / pyxtxt / olefile + 自行解析
+    # 参考：https://github.com/Horsmann/sharepoint-to-text
+
+    def _extract_doc(self, path: Path) -> ExtractedDoc:
+        """Extract text from .doc via macOS textutil → docx → _extract_docx."""
+        with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp:
+            tmp_path = Path(tmp.name)
+        try:
+            subprocess.run(
+                ["textutil", "-convert", "docx", "-output", str(tmp_path), str(path)],
+                check=True,
+                capture_output=True,
+            )
+            return self._extract_docx(tmp_path)
+        except Exception:
+            logger.exception("textutil .doc 转换失败: %s", path)
+            return ExtractedDoc(text="", structure=[], source_path=path)
+        finally:
+            tmp_path.unlink(missing_ok=True)
+
+    def _extract_xls(self, path: Path) -> ExtractedDoc:
+        """Extract text from .xls using xlrd (pure Python)."""
+        import xlrd
+
+        wb = xlrd.open_workbook(str(path))
+        text_parts: list[str] = []
+        for ws in wb.sheets():
+            for row_idx in range(ws.nrows):
+                cells = [str(ws.cell_value(row_idx, col_idx)) for col_idx in range(ws.ncols)]
+                line = ", ".join(c for c in cells if c and c != "0.0")
+                if line:
+                    text_parts.append(line)
+        return ExtractedDoc(text="\n".join(text_parts), structure=[], source_path=path)
+
+    def _extract_ppt(self, path: Path) -> ExtractedDoc:
+        """Extract text from .ppt via macOS textutil → txt."""
+        with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as tmp:
+            tmp_path = Path(tmp.name)
+        try:
+            subprocess.run(
+                ["textutil", "-convert", "txt", "-output", str(tmp_path), str(path)],
+                check=True,
+                capture_output=True,
+            )
+            return self._extract_txt(tmp_path)
+        except Exception:
+            logger.exception("textutil .ppt 转换失败: %s", path)
+            return ExtractedDoc(text="", structure=[], source_path=path)
+        finally:
+            tmp_path.unlink(missing_ok=True)
