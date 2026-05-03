@@ -81,6 +81,7 @@ class Decompressor:
             import py7zr
 
             with py7zr.SevenZipFile(archive_path, "r") as sz:
+                self._validate_7z_members(sz, dest_path)
                 sz.extractall(dest)
         elif suffix == ".rar":
             from pyunpack import Archive
@@ -96,7 +97,18 @@ class Decompressor:
             if member.is_dir():
                 continue
             member_path = (dest_resolved / member.filename).resolve()
-            if not str(member_path).startswith(str(dest_resolved)):
+            if not member_path.is_relative_to(dest_resolved):
                 raise ValueError(f"zip-slip 检测: {member.filename} 试图逃逸到目标目录外")
             if os.path.islink(member_path) if member_path.exists() else False:
                 raise ValueError(f"符号链接检测: {member.filename} 为符号链接")
+
+    @staticmethod
+    def _validate_7z_members(sz, dest: Path) -> None:
+        dest_resolved = dest.resolve()
+        for info in sz.files:
+            name = getattr(info, "filename", None)
+            if not name:
+                continue
+            member_path = (dest_resolved / name).resolve()
+            if not member_path.is_relative_to(dest_resolved):
+                raise ValueError(f"路径逃逸检测: {name} 试图逃逸到目标目录外")

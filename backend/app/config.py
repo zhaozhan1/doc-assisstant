@@ -79,7 +79,7 @@ class OnlineSearchConfig(BaseModel):
 
 
 class GenerationConfig(BaseModel):
-    output_format: str = "docx"
+    output_format: Literal["docx", "md"] = "docx"
     save_path: str = "./output"
     include_sources: bool = True
     max_prompt_tokens: int = 4096

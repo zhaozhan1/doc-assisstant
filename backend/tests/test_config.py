@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from app.config import AppConfig, ServerConfig
+from app.config import AppConfig, GenerationConfig, ServerConfig
 
 
 class TestAppConfig:
@@ -157,6 +157,17 @@ class TestGenerationConfig:
         assert config.generation.save_path == "./output"
         assert config.generation.include_sources is True
         assert config.generation.max_prompt_tokens == 4096
+        assert config.generation.word_template_path == ""
+
+    def test_output_format_validation(self) -> None:
+        """output_format must be 'docx' or 'md'; other values raise ValidationError."""
+        # Valid values should work
+        GenerationConfig(output_format="docx")
+        GenerationConfig(output_format="md")
+
+        # Invalid value should raise ValidationError
+        with pytest.raises(ValidationError):
+            GenerationConfig(output_format="pdf")
 
 
 class TestServerConfig:

@@ -121,3 +121,39 @@ class TestSecurity:
         zip_path.write_bytes(buf.getvalue())
         with pytest.raises(ValueError, match="zip-slip"):
             decompressor.extract(zip_path)
+
+    def test_7z_path_traversal_rejected(self, tmp_path: Path) -> None:
+        """_validate_7z_members rejects members that escape the destination directory."""
+        import py7zr
+
+        # Create a real .7z with a path-traversal member name
+        payload = tmp_path / "payload.txt"
+        payload.write_text("data", encoding="utf-8")
+        sevenz_path = tmp_path / "evil.7z"
+        with py7zr.SevenZipFile(sevenz_path, "w") as sz:
+            sz.write(payload, "../../etc/evil.txt")
+
+        dest = tmp_path / "extract_dest"
+        dest.mkdir()
+
+        with (
+            py7zr.SevenZipFile(sevenz_path, "r") as sz,
+            pytest.raises(ValueError, match="路径逃逸检测"),
+        ):
+            Decompressor._validate_7z_members(sz, dest)
+
+    def test_7z_normal_extract(self, decompressor: Decompressor, tmp_path: Path) -> None:
+        """Normal .7z extraction produces expected FileInfo results."""
+        import py7zr
+
+        inner = tmp_path / "doc.txt"
+        inner.write_text("seven-zip content", encoding="utf-8")
+        sevenz_path = tmp_path / "archive.7z"
+        with py7zr.SevenZipFile(sevenz_path, "w") as sz:
+            sz.write(inner, "doc.txt")
+
+        results = decompressor.extract(sevenz_path)
+        assert len(results) == 1
+        assert results[0].format == ".txt"
+        assert results[0].original_archive == sevenz_path
+        assert "seven-zip content" in results[0].path.read_text()

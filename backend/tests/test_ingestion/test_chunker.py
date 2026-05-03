@@ -74,3 +74,21 @@ class TestEdgeCases:
         chunks = chunker.split(doc, sample_meta)
         for i, c in enumerate(chunks):
             assert c.chunk_index == i
+
+    def test_force_split_long_paragraph(self, chunker: Chunker, sample_meta: DocumentMetadata) -> None:
+        """A single paragraph > 2x chunk_size is force-split into multiple chunks at sentence boundaries."""
+        # chunk_size=100, so create a paragraph with 300+ chars and sentence-ending punctuation
+        sentence = "这是一句话，用来测试分块。"  # 13 chars per sentence
+        long_text = sentence * 25  # ~325 chars, well over 2x chunk_size
+        doc = _make_doc(long_text)
+        chunks = chunker.split(doc, sample_meta)
+
+        assert len(chunks) >= 3, f"Expected >= 3 chunks from long paragraph, got {len(chunks)}"
+        # Every chunk should be under chunk_size (plus some tolerance for overlap)
+        for c in chunks:
+            assert len(c.text) <= chunker._chunk_size * 1.1, (
+                f"Chunk too long: {len(c.text)} chars (chunk_size={chunker._chunk_size})"
+            )
+        # Reassembled text should preserve the original content (no data loss)
+        reassembled = "".join(c.text for c in chunks)
+        assert reassembled == long_text
