@@ -168,6 +168,23 @@ class TestUpdateFileMetadata:
 
         mock_collection.update.assert_not_called()
 
+    @pytest.mark.asyncio
+    async def test_merges_with_existing_metadata(
+        self, vs_with_mock_collection: VectorStore, mock_collection: MagicMock
+    ) -> None:
+        mock_collection.get.return_value = {
+            "ids": ["a.txt::0"],
+            "metadatas": [{"source_file": "a.txt", "file_md5": "abc", "import_time": "2025-01-01T00:00:00"}],
+        }
+
+        await vs_with_mock_collection.update_file_metadata("a.txt", {"doc_type": "通知"})
+
+        call_args = mock_collection.update.call_args
+        merged_meta = call_args.kwargs["metadatas"][0]
+        assert merged_meta["doc_type"] == "通知"
+        assert merged_meta["file_md5"] == "abc"
+        assert merged_meta["import_time"] == "2025-01-01T00:00:00"
+
 
 class TestFindByMd5:
     @pytest.mark.asyncio

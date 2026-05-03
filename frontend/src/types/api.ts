@@ -2,9 +2,10 @@ export interface IndexedFile {
   source_file: string;
   file_name: string;
   doc_type: string;
-  doc_date: string | null;
   file_md5: string;
   chunk_count: number;
+  created_date: string | null;
+  import_date: string | null;
   duplicate_with: string | null;
 }
 
@@ -75,7 +76,7 @@ export interface FileListParams {
   doc_types?: string;
   date_from?: string;
   date_to?: string;
-  sort_by?: "file_name" | "doc_date" | "chunk_count";
+  sort_by?: "file_name" | "import_date" | "chunk_count";
   sort_order?: "asc" | "desc";
 }
 

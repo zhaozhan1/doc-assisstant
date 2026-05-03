@@ -33,9 +33,10 @@ class FileService:
                     source_file=src,
                     file_name=meta.get("file_name", ""),
                     doc_type=meta.get("doc_type", ""),
-                    doc_date=meta.get("doc_date") or None,
                     file_md5=meta.get("file_md5", ""),
                     chunk_count=len(chunks),
+                    created_date=meta.get("file_created_time") or None,
+                    import_date=meta.get("import_time") or None,
                 )
             )
 
@@ -61,9 +62,11 @@ class FileService:
         if request.doc_types:
             result = [f for f in result if f.doc_type in request.doc_types]
         if request.date_from:
-            result = [f for f in result if f.doc_date and f.doc_date >= request.date_from.isoformat()]
+            date_from_str = request.date_from.isoformat()
+            result = [f for f in result if f.import_date and f.import_date >= date_from_str]
         if request.date_to:
-            result = [f for f in result if f.doc_date and f.doc_date <= request.date_to.isoformat()]
+            date_to_str = request.date_to.isoformat()
+            result = [f for f in result if f.import_date and f.import_date <= date_to_str]
         return result
 
     def _sort(self, files: list[IndexedFile], request: FileListRequest) -> list[IndexedFile]:

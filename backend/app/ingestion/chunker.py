@@ -25,6 +25,7 @@ class Chunker:
                     "doc_type": meta.doc_type,
                     "doc_date": meta.doc_date.isoformat() if meta.doc_date else "",
                     "file_name": meta.file_name,
+                    "file_created_time": meta.file_created_time.isoformat() if meta.file_created_time else "",
                 },
             )
             for i, text in enumerate(merged)

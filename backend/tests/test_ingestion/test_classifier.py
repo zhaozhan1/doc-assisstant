@@ -98,3 +98,18 @@ class TestMetadataExtractor:
         doc = ExtractedDoc(text="test", structure=[], source_path=f)
         meta = metadata_extractor.extract(doc)
         assert isinstance(meta.import_time, datetime)
+
+    def test_extracts_file_created_time(self, metadata_extractor: MetadataExtractor, tmp_path: Path) -> None:
+        f = tmp_path / "test.txt"
+        f.write_text("test", encoding="utf-8")
+        doc = ExtractedDoc(text="test", structure=[], source_path=f)
+        meta = metadata_extractor.extract(doc)
+        assert meta.file_created_time is not None
+        assert isinstance(meta.file_created_time, datetime)
+
+    def test_file_created_time_none_for_missing_file(
+        self, metadata_extractor: MetadataExtractor, tmp_path: Path
+    ) -> None:
+        gone = tmp_path / "gone.txt"
+        result = metadata_extractor._get_file_created_time(gone)
+        assert result is None

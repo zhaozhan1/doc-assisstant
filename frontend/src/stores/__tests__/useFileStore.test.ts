@@ -25,9 +25,10 @@ describe("useFileStore", () => {
           source_file: "a.docx",
           file_name: "a.docx",
           doc_type: "通知",
-          doc_date: "2026-01-01",
           file_md5: "abc",
           chunk_count: 5,
+          created_date: "2025-12-01T08:00:00",
+          import_date: "2026-01-01T10:00:00",
           duplicate_with: null,
         },
       ];

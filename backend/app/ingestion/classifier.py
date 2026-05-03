@@ -41,6 +41,7 @@ class MetadataExtractor:
     def extract(self, doc: ExtractedDoc) -> DocumentMetadata:
         doc_date = self._extract_date(doc.text) or self._extract_date_from_path(doc.source_path)
         file_md5 = self._compute_md5(doc.source_path)
+        file_created_time = self._get_file_created_time(doc.source_path)
         return DocumentMetadata(
             file_name=doc.source_path.name,
             source_path=str(doc.source_path),
@@ -48,7 +49,14 @@ class MetadataExtractor:
             doc_date=doc_date,
             doc_type="",
             file_md5=file_md5,
+            file_created_time=file_created_time,
         )
+
+    def _get_file_created_time(self, path: Path) -> datetime | None:
+        try:
+            return datetime.fromtimestamp(path.stat().st_birthtime)
+        except (OSError, AttributeError):
+            return None
 
     def _extract_date(self, text: str) -> datetime | None:
         for pattern, constructor in self._DATE_PATTERNS:

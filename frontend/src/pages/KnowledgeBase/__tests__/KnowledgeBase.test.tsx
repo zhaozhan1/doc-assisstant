@@ -16,27 +16,30 @@ const mockFiles: IndexedFile[] = [
     source_file: "notice1.docx",
     file_name: "关于开展年度检查的通知.docx",
     doc_type: "通知",
-    doc_date: "2026-04-15",
     file_md5: "abc123",
     chunk_count: 8,
+    created_date: "2026-03-10T08:00:00",
+    import_date: "2026-04-15T10:00:00",
     duplicate_with: null,
   },
   {
     source_file: "report1.docx",
     file_name: "2026年第一季度工作报告.docx",
     doc_type: "报告",
-    doc_date: "2026-03-31",
     file_md5: "def456",
     chunk_count: 12,
+    created_date: "2026-02-28T09:00:00",
+    import_date: "2026-03-31T14:00:00",
     duplicate_with: null,
   },
   {
     source_file: "plan1.docx",
     file_name: "2026年信息化建设方案.docx",
     doc_type: "方案",
-    doc_date: "2026-02-20",
     file_md5: "ghi789",
     chunk_count: 15,
+    created_date: "2026-01-15T08:00:00",
+    import_date: "2026-02-20T16:00:00",
     duplicate_with: null,
   },
 ];
@@ -146,7 +149,7 @@ describe("KnowledgeBase", () => {
     expect(screen.getByText("类型：")).toBeInTheDocument();
     expect(screen.getByText("全部")).toBeInTheDocument();
     // Sort select shows its default label
-    expect(screen.getByText("最近更新")).toBeInTheDocument();
+    expect(screen.getByText("最近入库")).toBeInTheDocument();
   });
 
   it("renders file table with correct columns and data", () => {
@@ -155,7 +158,8 @@ describe("KnowledgeBase", () => {
     // Column headers
     expect(screen.getByText("文件名")).toBeInTheDocument();
     expect(screen.getByText("类型")).toBeInTheDocument();
-    expect(screen.getByText("日期")).toBeInTheDocument();
+    expect(screen.getByText("创建日期")).toBeInTheDocument();
+    expect(screen.getByText("入库日期")).toBeInTheDocument();
     expect(screen.getByText("分块数")).toBeInTheDocument();
     expect(screen.getByText("操作")).toBeInTheDocument();
 

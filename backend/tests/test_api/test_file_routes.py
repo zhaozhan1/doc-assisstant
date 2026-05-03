@@ -27,9 +27,10 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
             source_file="/a.docx",
             file_name="a.docx",
             doc_type="通知",
-            doc_date="2025-01-01",
             file_md5="abc",
             chunk_count=3,
+            created_date="2024-12-01T08:00:00",
+            import_date="2025-01-15T10:00:00",
         )
     ]
     mock_file_service.delete_file.return_value = None
@@ -54,6 +55,8 @@ def test_list_files(client: TestClient) -> None:
     assert len(data) == 1
     assert data[0]["file_name"] == "a.docx"
     assert data[0]["doc_type"] == "通知"
+    assert data[0]["created_date"] == "2024-12-01T08:00:00"
+    assert data[0]["import_date"] == "2025-01-15T10:00:00"
 
 
 def test_delete_file(client: TestClient) -> None:

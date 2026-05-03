@@ -28,8 +28,8 @@ async def list_files(
     doc_types: str | None = None,
     date_from: date | None = None,
     date_to: date | None = None,
-    sort_by: Literal["file_name", "doc_date", "chunk_count"] = "file_name",
-    sort_order: Literal["asc", "desc"] = "asc",
+    sort_by: Literal["file_name", "import_date", "chunk_count"] = "import_date",
+    sort_order: Literal["asc", "desc"] = "desc",
     file_service: FileService = _file_service_dep,
 ) -> list[IndexedFile]:
     request = FileListRequest(

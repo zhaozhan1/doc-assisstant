@@ -44,17 +44,18 @@ class FileListRequest(BaseModel):
     doc_types: list[str] = Field(default_factory=list)
     date_from: date | None = None
     date_to: date | None = None
-    sort_by: Literal["file_name", "doc_date", "chunk_count"] = "file_name"
-    sort_order: Literal["asc", "desc"] = "asc"
+    sort_by: Literal["file_name", "import_date", "chunk_count"] = "import_date"
+    sort_order: Literal["asc", "desc"] = "desc"
 
 
 class IndexedFile(BaseModel):
     source_file: str
     file_name: str
     doc_type: str
-    doc_date: str | None = None
     file_md5: str
     chunk_count: int
+    created_date: str | None = None
+    import_date: str | None = None
     duplicate_with: str | None = None
 
 
