@@ -103,22 +103,32 @@ export interface KBSettingsUpdate {
 
 export interface LLMSettings {
   default_provider: string;
+  embed_provider: string;
   ollama_base_url: string;
   ollama_chat_model: string;
   ollama_embed_model: string;
   claude_base_url: string;
   claude_api_key: string;
   claude_chat_model: string;
+  openai_base_url: string;
+  openai_api_key: string;
+  openai_chat_model: string;
+  openai_embed_model: string;
 }
 
 export interface LLMSettingsUpdate {
   default_provider?: string | null;
+  embed_provider?: string | null;
   ollama_base_url?: string | null;
   ollama_chat_model?: string | null;
   ollama_embed_model?: string | null;
   claude_base_url?: string | null;
   claude_api_key?: string | null;
   claude_chat_model?: string | null;
+  openai_base_url?: string | null;
+  openai_api_key?: string | null;
+  openai_chat_model?: string | null;
+  openai_embed_model?: string | null;
 }
 
 export interface GenerationSettings {

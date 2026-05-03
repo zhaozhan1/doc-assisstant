@@ -217,31 +217,90 @@ export default function Settings() {
       label: "LLM",
       children: (
         <Form form={llmForm} layout="vertical" disabled={loading}>
-          <Form.Item label="默认提供商" name="default_provider">
+          <Form.Item label="聊天提供商" name="default_provider">
             <Select
               options={[
+                { label: "OpenAI 兼容", value: "openai" },
                 { label: "Ollama", value: "ollama" },
                 { label: "Claude", value: "claude" },
               ]}
             />
           </Form.Item>
-          <Form.Item label="Ollama Base URL" name="ollama_base_url">
-            <Input />
+          <Form.Item noStyle shouldUpdate>
+            {() => {
+              const provider = llmForm.getFieldValue("default_provider");
+              if (provider === "openai") {
+                return (
+                  <>
+                    <Form.Item label="Base URL" name="openai_base_url">
+                      <Input />
+                    </Form.Item>
+                    <Form.Item label="API Key" name="openai_api_key">
+                      <Input.Password />
+                    </Form.Item>
+                    <Form.Item label="Chat Model" name="openai_chat_model">
+                      <Input />
+                    </Form.Item>
+                  </>
+                );
+              }
+              if (provider === "ollama") {
+                return (
+                  <>
+                    <Form.Item label="Base URL" name="ollama_base_url">
+                      <Input />
+                    </Form.Item>
+                    <Form.Item label="Chat Model" name="ollama_chat_model">
+                      <Input />
+                    </Form.Item>
+                  </>
+                );
+              }
+              if (provider === "claude") {
+                return (
+                  <>
+                    <Form.Item label="Base URL" name="claude_base_url">
+                      <Input />
+                    </Form.Item>
+                    <Form.Item label="API Key" name="claude_api_key">
+                      <Input.Password />
+                    </Form.Item>
+                    <Form.Item label="Chat Model" name="claude_chat_model">
+                      <Input />
+                    </Form.Item>
+                  </>
+                );
+              }
+              return null;
+            }}
           </Form.Item>
-          <Form.Item label="Ollama Chat Model" name="ollama_chat_model">
-            <Input />
+          <Form.Item label="Embedding 提供商" name="embed_provider">
+            <Select
+              options={[
+                { label: "OpenAI 兼容", value: "openai" },
+                { label: "Ollama", value: "ollama" },
+              ]}
+            />
           </Form.Item>
-          <Form.Item label="Ollama Embed Model" name="ollama_embed_model">
-            <Input />
-          </Form.Item>
-          <Form.Item label="Claude Base URL" name="claude_base_url">
-            <Input />
-          </Form.Item>
-          <Form.Item label="Claude API Key" name="claude_api_key">
-            <Input.Password />
-          </Form.Item>
-          <Form.Item label="Claude Chat Model" name="claude_chat_model">
-            <Input />
+          <Form.Item noStyle shouldUpdate>
+            {() => {
+              const embedProv = llmForm.getFieldValue("embed_provider");
+              if (embedProv === "openai") {
+                return (
+                  <Form.Item label="Embed Model (OpenAI)" name="openai_embed_model">
+                    <Input />
+                  </Form.Item>
+                );
+              }
+              if (embedProv === "ollama") {
+                return (
+                  <Form.Item label="Embed Model (Ollama)" name="ollama_embed_model">
+                    <Input />
+                  </Form.Item>
+                );
+              }
+              return null;
+            }}
           </Form.Item>
           <Form.Item>
             <Button type="primary" onClick={handleSaveLLM}>
