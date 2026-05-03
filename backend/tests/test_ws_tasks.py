@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.chdir(tmp_path)
     config_file = tmp_path / "config.yaml"
-    config_file.write_text("server:\n  cors_origins:\n    - \"http://127.0.0.1:8000\"")
+    config_file.write_text('server:\n  cors_origins:\n    - "http://127.0.0.1:8000"')
 
     from app.main import create_app
 
@@ -39,9 +39,7 @@ def test_ws_nonexistent_task_returns_error(client):
 class TestWsOriginValidation:
     def test_ws_valid_origin_accepted(self, client) -> None:
         """Origin matching cors_origins should be accepted."""
-        with client.websocket_connect(
-            "/ws/tasks/test-id", headers={"origin": "http://127.0.0.1:8000"}
-        ) as ws:
+        with client.websocket_connect("/ws/tasks/test-id", headers={"origin": "http://127.0.0.1:8000"}) as ws:
             data = ws.receive_json()
             # Should get task error, not origin rejection
             assert data["type"] == "error"
@@ -51,7 +49,5 @@ class TestWsOriginValidation:
         from starlette.websockets import WebSocketDisconnect
 
         with pytest.raises(WebSocketDisconnect):  # noqa: SIM117
-            with client.websocket_connect(
-                "/ws/tasks/test-id", headers={"origin": "http://evil.example.com"}
-            ) as ws:
+            with client.websocket_connect("/ws/tasks/test-id", headers={"origin": "http://evil.example.com"}) as ws:
                 ws.receive_json()

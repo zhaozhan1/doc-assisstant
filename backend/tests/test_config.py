@@ -123,7 +123,7 @@ class TestOnlineSearchConfig:
         config_file.write_text("{}")
         config = AppConfig(_yaml_file=str(config_file))
         assert config.online_search.enabled is False
-        assert config.online_search.provider == "tavily"
+        assert config.online_search.provider == "baidu"
         assert config.online_search.api_key == ""
         assert config.online_search.base_url == ""
         assert config.online_search.domains == ["gov.cn"]

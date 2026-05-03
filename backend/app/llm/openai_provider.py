@@ -35,7 +35,7 @@ class OpenAIProvider(BaseLLMProvider):
             async for line in resp.aiter_lines():
                 if not line or not line.startswith("data: "):
                     continue
-                payload = line[len("data: "):]
+                payload = line[len("data: ") :]
                 if payload == "[DONE]":
                     break
                 data = json.loads(payload)
