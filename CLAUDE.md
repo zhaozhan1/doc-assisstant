@@ -63,3 +63,16 @@ Conda `doc-assistant`（Python 3.10+），pnpm（Node.js 18+），Tesseract OCR 
 1. **文档路径** — 不使用 skill 默认路径，须放 `docs/` 目录规范内
 2. **`.claudeignore`** — 不得读取其中列出的文件内容
 3. **文档语言** — zh-CN
+
+## PyInstaller 打包规则
+
+4. **数据文件清单** — Python 包的数据文件（模板、XML、配置）不会自动打入 .app，须在 `doc-assistant.spec` 的 `datas` 中显式声明。新增依赖后检查其是否携带数据文件。
+5. **路径必须走 `resolve_path`** — 配置文件、数据库、日志等运行时路径必须通过 `app.paths.resolve_path()` 解析。`AppConfig` 须传 `_yaml_file=resolve_path("config.yaml")`，确保 .app 从 `~/Library/Application Support/doc-assistant/` 加载。
+6. **绝对路径调用外部命令** — .app 环境的 PATH 仅含 `/usr/bin:/bin:/usr/sbin:/sbin`，调用系统命令（如 textutil）须用 `shutil.which()` 回退绝对路径。
+7. **构建后验证** — `pyinstaller` 构建后须检查：关键数据文件是否在 bundle 中（`find dist/公文助手.app -name "..."`）、配置路径是否一致。
+
+## Debug 规则（.app 环境）
+
+8. **先读完整 traceback** — structlog JSON 日志中 `exc_info` 可能丢失调用栈。如果 traceback 不完整，先加 `traceback.format_exc()` 明确输出。
+9. **在目标环境验证** — .app 内部环境（PyInstaller、frozen CWD、精简 PATH）与 dev 环境有本质差异。本地测试通过不等于 .app 正确。优先在 .app 日志中确认假设。
+10. **逐层追踪数据流** — 从最终失败点向前追踪每一层数据流，找到第一个产出错误数据的层。禁止只看症状就假设根因。

@@ -40,15 +40,11 @@ class Ingester:
                 meta = self.metadata_extractor.extract(doc)
                 meta.doc_type = await self.classifier.classify(doc.text)
 
-                # Global dedup: same content at a different path
+                # Dedup: skip if content already exists
                 existing_path = await self.vector_store.find_by_md5(meta.file_md5)
-                if existing_path and existing_path != str(fi.path):
-                    logger.info("MD5 去重: 内容已存在于 %s，删除旧路径", existing_path)
-                    await self.vector_store.delete_by_file(existing_path)
-
-                existing = await self.vector_store.check_file_exists(str(fi.path), meta.file_md5)
-                if existing:
-                    continue
+                if existing_path:
+                    logger.info("MD5 去重: 内容已存在于 %s，跳过", existing_path)
+                    return FileResult(path=str(path), status="skipped", error="文件内容已导入", chunks_count=0)
 
                 chunks = (
                     self.chunker.smart_split(doc, meta) if self._use_smart_chunking else self.chunker.split(doc, meta)
@@ -59,6 +55,9 @@ class Ingester:
                 await self.vector_store.delete_by_file(str(fi.path))
                 await self.vector_store.upsert(chunks)
                 total_chunks += len(chunks)
+
+            if total_chunks == 0:
+                return FileResult(path=str(path), status="failed", error="无法提取文本内容", chunks_count=0)
 
             return FileResult(path=str(path), status="success", chunks_count=total_chunks)
 

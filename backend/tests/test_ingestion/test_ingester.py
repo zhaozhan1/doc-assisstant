@@ -90,8 +90,8 @@ class TestProcessFile:
 
         # Second import should skip (MD5 unchanged)
         result = await ingester.process_file(txt)
-        assert result.status == "success"
-        assert result.chunks_count == 0
+        assert result.status == "skipped"
+        assert result.error == "文件内容已导入"
 
 
 class TestMD5GlobalDedup:
@@ -99,7 +99,7 @@ class TestMD5GlobalDedup:
 
     @pytest.mark.asyncio
     async def test_process_file_md5_global_dedup_new_path(self, ingester: Ingester, tmp_path: Path) -> None:
-        """When file content already exists at /old/path, delete old path and upsert new."""
+        """When file content already exists at /old/path, skip entirely."""
         new_path = tmp_path / "new" / "a.txt"
         new_path.parent.mkdir(parents=True, exist_ok=True)
         new_path.write_text("测试内容", encoding="utf-8")
@@ -121,26 +121,18 @@ class TestMD5GlobalDedup:
 
         # find_by_md5 returns old path (different from current)
         ingester.vector_store.find_by_md5 = AsyncMock(return_value=old_path_str)
-        # check_file_exists returns False so processing proceeds
-        ingester.vector_store.check_file_exists = AsyncMock(return_value=False)
-        ingester.vector_store.delete_by_file = AsyncMock()
-        ingester.vector_store.upsert = AsyncMock()
 
         # Mock classifier
         ingester.classifier.classify = AsyncMock(return_value="通知")  # type: ignore[attr-defined]
 
         result = await ingester.process_file(new_path)
 
-        assert result.status == "success"
-        assert result.chunks_count >= 1
-        # Old path chunks should be deleted
-        ingester.vector_store.delete_by_file.assert_any_call(old_path_str)
-        # Upsert should happen with new chunks
-        ingester.vector_store.upsert.assert_called_once()
+        assert result.status == "skipped"
+        assert result.error == "文件内容已导入"
 
     @pytest.mark.asyncio
     async def test_process_file_md5_dedup_same_path_no_delete(self, ingester: Ingester, tmp_path: Path) -> None:
-        """When find_by_md5 returns the SAME path, no extra delete_by_file call."""
+        """When find_by_md5 returns the SAME path, skip entirely."""
         new_path = tmp_path / "a.txt"
         new_path.write_text("测试内容", encoding="utf-8")
 
@@ -158,18 +150,12 @@ class TestMD5GlobalDedup:
 
         # find_by_md5 returns same path as current
         ingester.vector_store.find_by_md5 = AsyncMock(return_value=str(new_path))
-        ingester.vector_store.check_file_exists = AsyncMock(return_value=False)
-        ingester.vector_store.delete_by_file = AsyncMock()
-        ingester.vector_store.upsert = AsyncMock()
         ingester.classifier.classify = AsyncMock(return_value="通知")  # type: ignore[attr-defined]
 
         result = await ingester.process_file(new_path)
 
-        assert result.status == "success"
-        # delete_by_file should only be called for the current path (existing behavior),
-        # NOT an extra call for dedup
-        calls = [c.args[0] for c in ingester.vector_store.delete_by_file.call_args_list]
-        assert calls.count(str(new_path)) == 1
+        assert result.status == "skipped"
+        assert result.error == "文件内容已导入"
 
 
 class TestImportTimeInjection:

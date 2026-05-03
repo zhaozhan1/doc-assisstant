@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   Card,
   Statistic,
@@ -58,6 +58,9 @@ export default function KnowledgeBase() {
     undefined,
   );
   const [sortValue, setSortValue] = useState("doc_date_desc");
+  const submittedRef = useRef<Set<string>>(new Set());
+
+  const getFileKey = (f: File) => `${f.name}:${f.size}:${f.lastModified}`;
 
   // Build query params from filters
   const buildParams = useCallback((): FileListParams => {
@@ -146,6 +149,7 @@ export default function KnowledgeBase() {
 
   // Close import result
   const handleCloseImport = () => {
+    submittedRef.current.clear();
     reset();
     fetchFiles(buildParams());
     fetchStats();
@@ -263,10 +267,16 @@ export default function KnowledgeBase() {
           showUploadList={false}
           beforeUpload={() => false}
           onChange={(info) => {
-            const fileList = info.fileList
-              .map((f) => f.originFileObj)
-              .filter((f): f is NonNullable<typeof f> => f != null);
-            if (fileList.length > 0) handleUpload(fileList as File[]);
+            const newFiles: File[] = [];
+            for (const f of info.fileList) {
+              if (!f.originFileObj) continue;
+              const key = getFileKey(f.originFileObj);
+              if (!submittedRef.current.has(key)) {
+                submittedRef.current.add(key);
+                newFiles.push(f.originFileObj);
+              }
+            }
+            if (newFiles.length > 0) handleUpload(newFiles);
           }}
         >
           <p className="ant-upload-drag-icon">
@@ -281,10 +291,16 @@ export default function KnowledgeBase() {
           showUploadList={false}
           beforeUpload={() => false}
           onChange={(info) => {
-            const fileList = info.fileList
-              .map((f) => f.originFileObj)
-              .filter((f): f is NonNullable<typeof f> => f != null);
-            if (fileList.length > 0) handleUpload(fileList as File[]);
+            const newFiles: File[] = [];
+            for (const f of info.fileList) {
+              if (!f.originFileObj) continue;
+              const key = getFileKey(f.originFileObj);
+              if (!submittedRef.current.has(key)) {
+                submittedRef.current.add(key);
+                newFiles.push(f.originFileObj);
+              }
+            }
+            if (newFiles.length > 0) handleUpload(newFiles);
           }}
         >
           <Button icon={<FolderOpenOutlined />} block>
