@@ -58,8 +58,13 @@ class Extractor:
         pos = 0
 
         for para in doc.paragraphs:
-            if para.style and para.style.name.startswith("Heading"):
-                level_str = para.style.name.replace("Heading ", "").replace("Heading", "1")
+            # para.style may fail if .docx lacks a styles part (e.g. textutil output)
+            try:
+                style_name = para.style.name if para.style else None
+            except Exception:
+                style_name = None
+            if style_name and style_name.startswith("Heading"):
+                level_str = style_name.replace("Heading ", "").replace("Heading", "1")
                 try:
                     level = int(level_str)
                 except ValueError:
@@ -144,17 +149,19 @@ class Extractor:
 
     def _extract_doc(self, path: Path) -> ExtractedDoc:
         """Extract text from .doc via macOS textutil → docx → _extract_docx."""
+        import shutil
+        textutil_path = shutil.which("textutil") or "/usr/bin/textutil"
         with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp:
             tmp_path = Path(tmp.name)
         try:
             subprocess.run(
-                ["/usr/bin/textutil", "-convert", "docx", "-output", str(tmp_path), str(path)],
+                [textutil_path, "-convert", "docx", "-output", str(tmp_path), str(path)],
                 check=True,
                 capture_output=True,
             )
-            result = self._extract_docx(tmp_path)
-            result.source_path = path
-            return result
+            extracted = self._extract_docx(tmp_path)
+            extracted.source_path = path
+            return extracted
         except Exception:
             logger.exception("textutil .doc 转换失败: %s", path)
             return ExtractedDoc(text="", structure=[], source_path=path)
@@ -177,11 +184,13 @@ class Extractor:
 
     def _extract_ppt(self, path: Path) -> ExtractedDoc:
         """Extract text from .ppt via macOS textutil → txt."""
+        import shutil
+        textutil_path = shutil.which("textutil") or "/usr/bin/textutil"
         with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as tmp:
             tmp_path = Path(tmp.name)
         try:
             subprocess.run(
-                ["/usr/bin/textutil", "-convert", "txt", "-output", str(tmp_path), str(path)],
+                [textutil_path, "-convert", "txt", "-output", str(tmp_path), str(path)],
                 check=True,
                 capture_output=True,
             )

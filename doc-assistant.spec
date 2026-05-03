@@ -10,6 +10,10 @@ PROJECT_ROOT = Path('.').resolve()
 FRONTEND_DIST = PROJECT_ROOT / 'frontend' / 'dist'
 TEMPLATES_DIR = PROJECT_ROOT / 'backend' / 'app' / 'generation' / 'templates'
 
+# python-docx templates (needed for .doc→.docx via textutil which produces minimal .docx without styles)
+import docx as _docx
+DOCX_TEMPLATES_DIR = str(Path(_docx.__file__).parent / 'templates')
+
 chromadb_datas, chromadb_binaries, chromadb_hiddenimports = collect_all('chromadb')
 
 a = Analysis(
@@ -19,6 +23,7 @@ a = Analysis(
     datas=[
         (str(FRONTEND_DIST), 'frontend'),
         (str(TEMPLATES_DIR), 'app/generation/templates'),
+        (DOCX_TEMPLATES_DIR, 'docx/templates'),
     ] + chromadb_datas,
     hiddenimports=[
         'uvicorn.logging',
