@@ -40,9 +40,15 @@ class SourceAttribution(BaseModel):
     date: str | None = None
 
 
+class SelectedRefContent(BaseModel):
+    title: str
+    content: str
+
+
 class GenerationRequest(BaseModel):
     description: str = Field(..., min_length=1, max_length=2000)
     selected_refs: list[str] | None = Field(default=None, max_length=50)
+    selected_ref_contents: list[SelectedRefContent] | None = Field(default=None, max_length=50)
     requirements: str | None = Field(default=None, max_length=2000)
     template_id: str | None = Field(default=None, pattern=r"^[a-zA-Z0-9_-]+$")
 

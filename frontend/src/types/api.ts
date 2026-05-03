@@ -58,9 +58,15 @@ export interface SearchRequest {
   local_only?: boolean;
 }
 
+export interface SelectedRefContent {
+  title: string;
+  content: string;
+}
+
 export interface GenerationRequest {
   description: string;
   selected_refs?: string[] | null;
+  selected_ref_contents?: SelectedRefContent[] | null;
   requirements?: string | null;
   template_id?: string | null;
 }

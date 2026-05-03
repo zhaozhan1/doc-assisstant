@@ -167,9 +167,15 @@ export function StepByStepMode() {
       description: direction.trim(),
       selected_refs:
         selectedRefs.length > 0 ? selectedRefs : undefined,
+      selected_ref_contents:
+        selectedRefs.length > 0
+          ? searchResults
+              .filter((r) => selectedRefs.includes(r.title))
+              .map((r) => ({ title: r.title, content: r.content }))
+          : undefined,
       requirements: requirements.trim() || undefined,
     });
-  }, [direction, selectedRefs, requirements, startStream]);
+  }, [direction, selectedRefs, searchResults, requirements, startStream]);
 
   return (
     <div style={{ display: "flex", gap: 16, height: "100%" }}>

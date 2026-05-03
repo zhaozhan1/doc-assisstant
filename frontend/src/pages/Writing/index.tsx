@@ -1,4 +1,4 @@
-import { Segmented } from "antd";
+import { Segmented, ConfigProvider, theme } from "antd";
 import { useWritingStore } from "../../stores/useWritingStore";
 import { OneStepMode } from "./OneStepMode";
 import { StepByStepMode } from "./StepByStepMode";
@@ -36,11 +36,25 @@ export function Writing() {
           justifyContent: "center",
         }}
       >
-        <Segmented
-          options={modeOptions}
-          value={mode}
-          onChange={(val) => setMode(val as WritingMode)}
-        />
+        <ConfigProvider
+          theme={{
+            algorithm: theme.defaultAlgorithm,
+            components: {
+              Segmented: {
+                itemSelectedBg: "#1677ff",
+                itemSelectedColor: "#fff",
+                itemColor: "rgba(0, 0, 0, 0.65)",
+                itemHoverColor: "#1677ff",
+              },
+            },
+          }}
+        >
+          <Segmented
+            options={modeOptions}
+            value={mode}
+            onChange={(val) => setMode(val as WritingMode)}
+          />
+        </ConfigProvider>
       </div>
       <div style={{ flex: 1, padding: 16, overflow: "hidden" }}>
         {renderMode()}

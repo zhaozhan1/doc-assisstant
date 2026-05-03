@@ -9,7 +9,7 @@ from app.generation.prompt_builder import PromptBuilder
 from app.generation.template_manager import TemplateManager
 from app.generation.writer import Writer
 from app.models.generation import GenerationRequest, GenerationResult, PromptContext, SourceAttribution
-from app.models.search import SearchRequest, SourceType
+from app.models.search import SearchRequest, SourceType, UnifiedSearchResult
 from app.retrieval.retriever import Retriever
 
 logger = logging.getLogger(__name__)
@@ -79,11 +79,30 @@ class WriterService:
     async def generate_stream(self, req: GenerationRequest) -> AsyncGenerator[str, None]:
         intent = await self._intent_parser.parse(req.description)
         template = self._resolve_template(req.template_id, intent.doc_type)
-        search_results = await self._retriever.search(SearchRequest(query=" ".join(intent.keywords), top_k=5))
+
+        if req.selected_ref_contents:
+            style_refs = [
+                UnifiedSearchResult(
+                    title=r.title,
+                    content=r.content,
+                    score=1.0,
+                    source_type=SourceType.LOCAL,
+                    metadata={},
+                )
+                for r in req.selected_ref_contents
+            ]
+            policy_refs: list[UnifiedSearchResult] = []
+        else:
+            search_results = await self._retriever.search(
+                SearchRequest(query=" ".join(intent.keywords), top_k=5)
+            )
+            style_refs = [r for r in search_results[:5] if r.source_type == SourceType.LOCAL]
+            policy_refs = [r for r in search_results if r.source_type == SourceType.ONLINE]
+
         context = PromptContext(
             intent=intent,
-            style_refs=[r for r in search_results[:5] if r.source_type == SourceType.LOCAL],
-            policy_refs=[r for r in search_results if r.source_type == SourceType.ONLINE],
+            style_refs=style_refs,
+            policy_refs=policy_refs,
             template=template,
         )
         messages = self._prompt_builder.build(context)
