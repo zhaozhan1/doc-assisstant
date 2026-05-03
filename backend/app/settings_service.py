@@ -33,10 +33,27 @@ class SettingsService:
         return self._config.online_search
 
     async def test_connection(self, config: OnlineSearchConfigUpdate) -> ConnectionTestResult:
-        return ConnectionTestResult(
-            success=False,
-            message=f"Provider '{self._config.online_search.provider}' 尚未实现，无法测试连接",
-        )
+        provider = self._config.online_search.provider
+        try:
+            if provider == "baidu":
+                from app.retrieval.baidu_provider import BaiduSearchProvider
+
+                prov = BaiduSearchProvider()
+                results = await prov.search("测试", max_results=1)
+                return ConnectionTestResult(
+                    success=True,
+                    message=f"连接成功，返回 {len(results)} 条结果",
+                )
+            return ConnectionTestResult(
+                success=False,
+                message=f"Provider '{provider}' 尚未实现",
+            )
+        except Exception as e:
+            logger.warning("连接测试失败: %s", e, exc_info=True)
+            return ConnectionTestResult(
+                success=False,
+                message=f"连接失败: {e}",
+            )
 
     def _write_config(self) -> None:
         data: dict = {}
