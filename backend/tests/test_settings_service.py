@@ -16,7 +16,7 @@ def config_yaml(tmp_path: Path) -> Path:
     data = {
         "online_search": {
             "enabled": False,
-            "provider": "tavily",
+            "provider": "baidu",
             "api_key": "",
             "domains": ["gov.cn"],
             "max_results": 3,
@@ -38,7 +38,7 @@ def test_get_online_search_config(service: SettingsService) -> None:
     result = service.get_online_search_config()
     assert isinstance(result, OnlineSearchConfig)
     assert result.enabled is False
-    assert result.provider == "tavily"
+    assert result.provider == "baidu"
 
 
 def test_update_online_search_config(service: SettingsService) -> None:
@@ -54,9 +54,9 @@ def test_update_online_search_config(service: SettingsService) -> None:
 
 
 def test_update_preserves_unchanged_fields(service: SettingsService) -> None:
-    """Update only enabled=True, provider stays 'tavily'."""
+    """Update only enabled=True, provider stays 'baidu'."""
     update = OnlineSearchConfigUpdate(enabled=True)
     result = service.update_online_search_config(update)
     assert result.enabled is True
-    assert result.provider == "tavily"
+    assert result.provider == "baidu"
     assert result.api_key == ""

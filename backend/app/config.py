@@ -71,7 +71,7 @@ class LoggingConfig(BaseModel):
 
 class OnlineSearchConfig(BaseModel):
     enabled: bool = False
-    provider: str = "tavily"
+    provider: str = "baidu"
     api_key: str = ""
     base_url: str = ""
     domains: list[str] = ["gov.cn"]

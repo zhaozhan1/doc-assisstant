@@ -24,7 +24,7 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     mock_settings = Mock()
     mock_settings.get_online_search_config.return_value = OnlineSearchConfig(
         enabled=True,
-        provider="tavily",
+        provider="baidu",
         api_key="test-key",
         base_url="https://api.tavily.com",
         domains=["gov.cn"],
@@ -32,7 +32,7 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     )
     mock_settings.update_online_search_config.return_value = OnlineSearchConfig(
         enabled=False,
-        provider="tavily",
+        provider="baidu",
         api_key="new-key",
         base_url="",
         domains=["gov.cn"],
@@ -54,7 +54,7 @@ def test_get_online_search_config(client: TestClient) -> None:
     assert response.status_code == 200
     data = response.json()
     assert data["enabled"] is True
-    assert data["provider"] == "tavily"
+    assert data["provider"] == "baidu"
     assert data["api_key"] == "********"
 
 

@@ -36,7 +36,7 @@ const mockGeneration: GenerationSettings = {
 
 const mockOnlineSearch: OnlineSearchConfig = {
   enabled: true,
-  provider: "bing",
+  provider: "baidu",
   api_key: "search-api-key",
   base_url: "https://api.bing.microsoft.com",
   domains: ["gov.cn", "example.com"],

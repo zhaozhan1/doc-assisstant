@@ -266,8 +266,7 @@ export default function Settings() {
           <Form.Item label="搜索提供商" name="provider">
             <Select
               options={[
-                { label: "Bing", value: "bing" },
-                { label: "Google", value: "google" },
+                { label: "百度", value: "baidu" },
               ]}
             />
           </Form.Item>
