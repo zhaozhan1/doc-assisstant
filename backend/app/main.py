@@ -112,7 +112,7 @@ def _find_frontend_dir() -> Path | None:
 
 
 def create_app() -> FastAPI:
-    config = AppConfig()
+    config = AppConfig(_yaml_file=resolve_path("config.yaml"))
     config.knowledge_base.db_path = resolve_path(config.knowledge_base.db_path)
     config.knowledge_base.metadata_path = resolve_path(config.knowledge_base.metadata_path)
     config.logging.file = resolve_path(config.logging.file)
