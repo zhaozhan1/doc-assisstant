@@ -112,6 +112,11 @@ class WriterService:
             return []
         return await self._retriever.search(SearchRequest(query=" ".join(ref_ids), top_k=len(ref_ids)))
 
+    async def save_stream_result(self, content: str, description: str) -> str:
+        intent = await self._intent_parser.parse(description)
+        output_path = self._docx_formatter.format(content, intent.doc_type, intent.topic)
+        return str(output_path)
+
     def _extract_sources(self, results: list) -> list[SourceAttribution]:
         sources = []
         for r in results:

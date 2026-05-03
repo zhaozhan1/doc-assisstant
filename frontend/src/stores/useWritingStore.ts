@@ -104,8 +104,20 @@ export const useWritingStore = create<WritingState & WritingActions>(
             throw new Error("无法读取响应流");
           }
 
-          for await (const token of parseSSEStream(reader)) {
-            set((state) => ({ content: state.content + token }));
+          for await (const event of parseSSEStream(reader)) {
+            if (event.type === "token") {
+              set((state) => ({ content: state.content + event.value }));
+            } else if (event.type === "output_path") {
+              const { sessionGeneratedDocs: existing } = get();
+              if (!existing.includes(event.value)) {
+                set({
+                  outputPath: event.value,
+                  sessionGeneratedDocs: [...existing, event.value],
+                });
+              } else {
+                set({ outputPath: event.value });
+              }
+            }
           }
 
           set({ isStreaming: false });

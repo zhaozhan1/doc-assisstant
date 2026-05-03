@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Button, Tag, Typography, Checkbox } from "antd";
+import { Button, Tag, Typography, Checkbox, message } from "antd";
 import {
   FileTextOutlined,
   SearchOutlined,
@@ -7,6 +7,7 @@ import {
 import Markdown from "react-markdown";
 import { useWritingStore } from "../../stores/useWritingStore";
 import { search } from "../../api/search";
+import { downloadFile } from "../../api/files";
 
 export function StepByStepMode() {
   const content = useWritingStore((s) => s.content);
@@ -295,19 +296,50 @@ export function StepByStepMode() {
         }}
       >
         {content ? (
-          <div
-            style={{
-              flex: 1,
-              overflow: "auto",
-              padding: "12px 0",
-              lineHeight: 1.8,
-            }}
-          >
-            <Typography.Title level={5} style={{ marginTop: 0 }}>
-              生成预览
-            </Typography.Title>
-            <Markdown>{content}</Markdown>
-          </div>
+          <>
+            <div
+              style={{
+                flex: 1,
+                overflow: "auto",
+                padding: "12px 0",
+                lineHeight: 1.8,
+              }}
+            >
+              <Typography.Title level={5} style={{ marginTop: 0 }}>
+                生成预览
+              </Typography.Title>
+              <Markdown>{content}</Markdown>
+            </div>
+            {!isStreaming && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  paddingTop: 12,
+                  borderTop: "1px solid #f0f0f0",
+                }}
+              >
+                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                  已参考历史文档
+                </Typography.Text>
+                <Button
+                  type="primary"
+                  onClick={() => {
+                    const outputPath =
+                      useWritingStore.getState().outputPath;
+                    if (outputPath) {
+                      window.open(downloadFile(outputPath), "_blank");
+                    } else {
+                      message.info("暂无可下载文件");
+                    }
+                  }}
+                >
+                  下载 .docx
+                </Button>
+              </div>
+            )}
+          </>
         ) : (
           <div
             style={{

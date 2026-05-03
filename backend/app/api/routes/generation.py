@@ -70,8 +70,19 @@ async def generate_stream(
     service: WriterService = _writer_service_dep,
 ):
     async def event_generator():
+        content_parts: list[str] = []
         async for token in service.generate_stream(req):
+            content_parts.append(token)
             yield f"data: {json.dumps({'token': token})}\n\n"
+
+        content = "".join(content_parts)
+        if content.strip():
+            try:
+                output_path = await service.save_stream_result(content, req.description)
+                yield f"data: {json.dumps({'output_path': output_path})}\n\n"
+            except Exception:
+                logger.exception("流式生成后保存 .docx 失败")
+
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
