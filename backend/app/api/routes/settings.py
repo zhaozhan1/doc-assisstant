@@ -38,9 +38,12 @@ async def get_online_search_config(
 @router.put("/online-search")
 async def update_online_search_config(
     update: OnlineSearchConfigUpdate,
+    request: Request,
     service: SettingsService = _settings_dep,
 ) -> dict:
-    return _mask_config(service.update_online_search_config(update))
+    result = service.update_online_search_config(update)
+    request.app.state.retriever.update_online_search(result)
+    return _mask_config(result)
 
 
 @router.post("/online-search/test-connection", response_model=ConnectionTestResult)

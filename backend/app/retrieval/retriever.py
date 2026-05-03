@@ -32,3 +32,8 @@ class Retriever:
 
     async def search_local(self, request: SearchRequest) -> list[UnifiedSearchResult]:
         return await self._local.search(request.query, request.top_k, request.filter)
+
+    def update_online_search(self, config: "OnlineSearchConfig") -> None:
+        from app.config import OnlineSearchConfig
+
+        self._online = OnlineSearchService.from_config(config)
