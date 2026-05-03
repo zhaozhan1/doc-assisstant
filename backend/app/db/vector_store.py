@@ -86,9 +86,11 @@ class VectorStore:
         results = self._collection.get(where={"source_file": source_file})
         if not results["ids"]:
             return
+        existing = results.get("metadatas") or [{}] * len(results["ids"])
+        merged = [{**meta, **updates} for meta in existing]
         self._collection.update(
             ids=results["ids"],
-            metadatas=[updates] * len(results["ids"]),
+            metadatas=merged,
         )
 
     async def file_exists(self, source_file: str) -> bool:
