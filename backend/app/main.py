@@ -51,6 +51,7 @@ def setup_logging(config: LoggingConfig, *, _force: bool = False) -> None:
             structlog.stdlib.add_log_level,
             structlog.stdlib.add_logger_name,
             structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.format_exc_info,
         ]
 
         console_handler = logging.StreamHandler()
@@ -119,6 +120,11 @@ def create_app() -> FastAPI:
     config.generation.save_path = resolve_path(config.generation.save_path)
     setup_logging(config.logging)
     logger.info("应用启动")
+    provider_cfg = config.llm.providers.get(config.llm.default_provider)
+    logger.info("配置加载: provider=%s, api_key_set=%s, base_url=%s",
+                config.llm.default_provider,
+                bool(getattr(provider_cfg, "api_key", "")),
+                getattr(provider_cfg, "base_url", ""))
 
     @asynccontextmanager
     async def _lifespan(app: FastAPI):
